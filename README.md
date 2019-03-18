@@ -1,5 +1,6 @@
 # NesJs
-Yet another NES emulator, in javascript
+
+Yet another NES emulator, in javascript.
 
 In progress.
 
@@ -11,8 +12,10 @@ Controller 1 is emulated, using the arrow keys for the d-pad, enter for Start, s
 
 # Usage
 
-Clone this repository, and open index.html in a browser.
+Clone this repository, and open `index.html` in a browser.
 
-Including js/testing.js instead of js/main.js runs a simple test comparing this emulator running nestest with a 'golden' nestest log. Currently runs up to the point where it starts using unofficial opcodes.
+Including `js/testing.js` instead of `js/main.js`, and uncommenting the `js/nestest.nes.js` and `js/nestest.log.js` scripts runs a simple test comparing this emulator running nestest with a 'golden' nestest log. Currently runs equally until it starts using undocumented opcodes.
 
-Thanks to the resources at [the nesdev wiki](http://wiki.nesdev.com/w/index.php/Nesdev_Wiki) for the documentation used for this.
+# Credits
+
+Thanks to the resources at [the nesdev wiki](http://wiki.nesdev.com/w/index.php/Nesdev_Wiki) for the test roms, documentation and some code snippets used for this.
