@@ -1,0 +1,12 @@
+
+pre {
+  margin: 0;
+  padding: 0;
+}
+
+#log {
+  font-family: monospace;
+  max-height: 400px;
+  min-height: 400px;
+  overflow: scroll;
+}

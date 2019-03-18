@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <title>NesJS</title>
+</head>
+<body>
+  <input id="rom" type="file">
+  <button id="pause">Pause</button>
+  <button id="reset">Reset</button>
+  <button id="hardreset">Power cycle</button><br>
+  <canvas id="output"></canvas>
+  <pre id="log"></pre><br>
+  <canvas id="nametables"></canvas>
+  <!--
+    <script src="js/nestest.log.js"></script>
+    <script src="js/nestest.nes.js"></script>
+  -->
+  <script src="js/cpu.js"></script>
+  <script src="js/ppu.js"></script>
+  <script src="mappers/nrom.js"></script>
+  <script src="js/nes.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
