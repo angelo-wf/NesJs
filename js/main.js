@@ -8,6 +8,7 @@ let c = el("output");
 c.width = 256;
 c.height = 240;
 let ctx = c.getContext("2d");
+let imgData = ctx.createImageData(256, 240);
 
 let c2 = el("nametables");
 c2.width = 8 * 32;
@@ -21,10 +22,10 @@ el("rom").onchange = function(e) {
     let arr = new Uint8Array(buf);
     if(nes.loadRom(arr)) {
       nes.hardReset();
-      loaded = true;
-      if(!paused) {
+      if(!loaded && !paused) {
         loopId = setInterval(update, 1000 / 60);
       }
+      loaded = true;
     }
   }
   reader.readAsArrayBuffer(e.target.files[0]);
@@ -52,6 +53,7 @@ el("hardreset").onclick = function(e) {
 
 function update() {
   nes.runFrame();
+  drawPixels();
   visualizeNametable(nes.ppu.ppuRam);
   visualizeSrites(nes.ppu.oamRam);
 }
@@ -70,14 +72,17 @@ function visualizeNametable(tbl) {
 }
 
 function visualizeSrites(spr) {
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, 256, 240);
   for(let i = 0; i < 64; i++) {
     let y = spr[i * 4];
     let x = spr[i * 4 + 3];
     ctx.fillStyle = "#ff0000";
     ctx.fillRect(x, y, 8, 8);
   }
+}
+
+function drawPixels() {
+  nes.getPixels(imgData.data);
+  ctx.putImageData(imgData, 0, 0);
 }
 
 function log(text) {
@@ -129,12 +134,14 @@ window.onkeydown = function(e) {
       e.preventDefault();
       break;
     }
-    case "a": {
+    case "a":
+    case "A": {
       nes.currentControlState |= 0x02;
       e.preventDefault();
       break;
     }
-    case "z": {
+    case "z":
+    case "Z": {
       nes.currentControlState |= 0x01;
       e.preventDefault();
       break;
@@ -174,12 +181,14 @@ window.onkeyup = function(e) {
       e.preventDefault();
       break;
     }
-    case "a": {
+    case "a":
+    case "A": {
       nes.currentControlState &= 0xfd;
       e.preventDefault();
       break;
     }
-    case "z": {
+    case "z":
+    case "Z": {
       nes.currentControlState &= 0xfe;
       e.preventDefault();
       break;

@@ -29,6 +29,12 @@ function Nrom(nes, rom) {
   }
 
   this.read = function(adr) {
+    if(adr < 0x6000) {
+      return 0; // not readable
+    }
+    if(adr < 0x8000) {
+      return this.prgRam[adr & 0x1fff];
+    }
     if(this.banks === 2) {
       return this.rom[0x10 + (adr & 0x7fff)];
     } else {
@@ -36,8 +42,11 @@ function Nrom(nes, rom) {
     }
   }
 
-  this.write = function(adr) {
-    // no mapper registers
+  this.write = function(adr, value) {
+    if(adr < 0x6000 || adr >= 0x8000) {
+      return; // no mapper registers
+    }
+    this.prgRam[adr & 0x1fff] = value;
   }
 
   // return if this read had to come from internal and which address
@@ -47,7 +56,7 @@ function Nrom(nes, rom) {
       if(this.hasChrRam) {
         return [true, this.chrRam[adr]];
       } else {
-        return [true, 0x10 + 0x4000 * this.banks + adr];
+        return [true, this.rom[0x10 + 0x4000 * this.banks + adr]];
       }
     } else {
       if(this.verticalMirroring) {

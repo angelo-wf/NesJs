@@ -32,17 +32,21 @@ function Nes() {
       log("Invalid rom loaded");
       return false;
     }
-    let mapper = (rom[6] & 0xf0) | (rom[7] >> 4);
+    let mapper = (rom[6] >> 4) | (rom[7] & 0xf0);
     if(mapper !== 0) {
       log("Unsupported mapper: " + mapper);
       return false;
     }
     this.mapper = new Nrom(this, rom);
     log(
-      "Loaded NROM rom: " + this.mapper.banks + " PRG banks, " +
-      this.mapper.chrBanks + " CHR banks"
+      "Loaded NROM rom: " + this.mapper.banks + " PRG bank(s), " +
+      this.mapper.chrBanks + " CHR bank(s)"
     );
     return true;
+  }
+
+  this.getPixels = function(data) {
+    this.ppu.setFrame(data);
   }
 
   this.hardReset = function() {

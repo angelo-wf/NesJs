@@ -10,3 +10,10 @@ pre {
   min-height: 400px;
   overflow: scroll;
 }
+
+#output {
+  width: 512px;
+  height: 480px;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
