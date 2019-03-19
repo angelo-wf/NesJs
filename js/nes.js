@@ -54,25 +54,21 @@ function Nes() {
     for(let i = 0; i < this.ram.length; i++) {
       this.ram[i] = 0;
     }
+    // reset everything else
+    this.reset();
+  }
 
-    this.cpu.hardReset();
+  this.reset = function() {
+    this.cpu.reset();
     this.ppu.reset();
-
+    this.mapper.reset();
     this.cycles = 0;
-
     this.inDma = false;
     this.dmaTimer = 0;
     this.dmaBase = 0;
     this.dmaValue = 0;
     this.latchedControlState = 0;
     this.controllerLatched = false;
-  }
-
-  this.reset = function() {
-    this.cpu.reset();
-    this.ppu.reset();
-    this.inDma = false;
-    this.dmaTimer = 0;
   }
 
   this.cycle = function() {

@@ -23,8 +23,8 @@ function Nrom(nes, rom) {
       this.chrRam[i] = 0;
     }
     // clear prg ram
-    for(let i = 0; i < this.rpgRam.length; i++) {
-      this.rpgRam[i] = 0;
+    for(let i = 0; i < this.prgRam.length; i++) {
+      this.prgRam[i] = 0;
     }
   }
 

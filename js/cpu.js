@@ -43,7 +43,7 @@ function Cpu(mem) {
   // cycles left
   this.cyclesLeft = 0;
 
-  this.hardReset = function() {
+  this.reset = function() {
     this.r[A] = 0;
     this.r[X] = 0;
     this.r[Y] = 0;
@@ -55,17 +55,6 @@ function Cpu(mem) {
     this.i = true;
     this.z = false;
     this.c = false;
-
-    this.irqWanted = false;
-    this.nmiWanted = false;
-
-    this.cyclesLeft = 7;
-  }
-
-  this.reset = function() {
-    this.r[SP] -= 3;
-    this.br[PC] = this.mem.read(0xfffc) | (this.mem.read(0xfffd) << 8);
-    this.i = true;
 
     this.irqWanted = false;
     this.nmiWanted = false;
@@ -175,14 +164,7 @@ function Cpu(mem) {
       // get the effective address
       let eff = this.getAdr(mode);
       // execute the instruction
-      let tbr;
-      try {
-        tbr = this.functions[instr].call(this, eff[0], instr);
-      } catch(e) {
-        console.log("FUNCTION ERROR: " + getWordRep(instr));
-        tbr = false;
-        throw e;
-      }
+      let tbr = this.functions[instr].call(this, eff[0], instr);
       // set possible extra cycles
       if(tbr) {
         // taken branch: 1 extra cycle
@@ -572,6 +554,7 @@ function Cpu(mem) {
     }
     this.setZandN(result);
     this.r[A] = result;
+    return false;
   }
 
   this.lsr = function(adr) {
@@ -812,6 +795,7 @@ function Cpu(mem) {
     let pullPc = this.mem.read(0x100 + ((++this.r[SP]) & 0xff));
     pullPc |= (this.mem.read(0x100 + ((++this.r[SP]) & 0xff)) << 8);
     this.br[PC] = pullPc;
+    return false;
   }
 
   this.jsr = function(adr) {
@@ -820,6 +804,7 @@ function Cpu(mem) {
     this.mem.write(0x100 + this.r[SP]--, pushPc >> 8);
     this.mem.write(0x100 + this.r[SP]--, pushPc & 0xff);
     this.br[PC] = adr;
+    return false;
   }
 
   this.rts = function(adr) {
@@ -827,11 +812,13 @@ function Cpu(mem) {
     let pullPc = this.mem.read(0x100 + ((++this.r[SP]) & 0xff));
     pullPc |= (this.mem.read(0x100 + ((++this.r[SP]) & 0xff)) << 8);
     this.br[PC] = pullPc + 1;
+    return false;
   }
 
   this.jmp = function(adr) {
     // jump to address
     this.br[PC] = adr;
+    return false;
   }
 
   this.bit = function(adr) {
