@@ -170,6 +170,9 @@ function Ppu(nes) {
           // copy x parts from t to v
           this.v &= 0x7be0;
           this.v |= (this.t & 0x41f);
+          // clear sprite buffers from sprites evaluated on line 239
+          this.spriteZeroIn = false;
+          this.spriteCount = 0;
         }
       } else if(this.dot === 280) {
         if(this.bgRendering || this.sprRendering) {
