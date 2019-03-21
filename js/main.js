@@ -10,10 +10,10 @@ c.height = 240;
 let ctx = c.getContext("2d");
 let imgData = ctx.createImageData(256, 240);
 
-let c2 = el("nametables");
-c2.width = 8 * 32;
-c2.height = 8 * 64;
-let ctx2 = c2.getContext("2d");
+// let c2 = el("nametables");
+// c2.width = 8 * 32;
+// c2.height = 8 * 64;
+// let ctx2 = c2.getContext("2d");
 
 el("rom").onchange = function(e) {
   let reader = new FileReader();
