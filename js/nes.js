@@ -135,6 +135,7 @@ function Nes() {
         this.latchedControlState |= 0x80; // set bit 7
         return ret;
       }
+      return 0; //not inplemented yet
     }
     return this.mapper.read(adr);
   }
@@ -168,6 +169,7 @@ function Nes() {
         }
         return;
       }
+      return; // not inplemented yet
     }
     this.mapper.write(adr, value);
   }

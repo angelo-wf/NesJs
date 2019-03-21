@@ -51,11 +51,15 @@ el("hardreset").onclick = function(e) {
   nes.hardReset();
 }
 
+el("runframe").onclick = function(e) {
+  update();
+}
+
 function update() {
   nes.runFrame();
   drawPixels();
-  visualizeNametable(nes.ppu.ppuRam);
-  visualizeSrites(nes.ppu.oamRam);
+  //visualizeNametable(nes.ppu.ppuRam);
+  //visualizeSrites(nes.ppu.oamRam);
 }
 
 function visualizeNametable(tbl) {
@@ -72,11 +76,11 @@ function visualizeNametable(tbl) {
 }
 
 function visualizeSrites(spr) {
+  ctx.strokeStyle = "#ff0000";
   for(let i = 0; i < 64; i++) {
     let y = spr[i * 4];
     let x = spr[i * 4 + 3];
-    ctx.fillStyle = "#ff0000";
-    ctx.fillRect(x, y, 8, 8);
+    ctx.strokeRect(x + 0.5, y + 0.5, 7, 7);
   }
 }
 

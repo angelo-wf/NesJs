@@ -4,11 +4,9 @@ Yet another NES emulator, in javascript.
 
 In development.
 
-The CPU emulation seems to be mostly functional, although none of the undocumented opcodes are implemented (yet).
+The CPU emulation seems to be mostly functional, although none of the undocumented opcodes are implemented (yet). The PPU emulation also seems to be mostly functional, except for 8*16 sprite mode.
 
-Currently runs some (most?) NROM games, although sprites are not emulated yet. It currently shows a visualization of the sprite positions in the PPU's OAM on top of the output canvas as red squares, and a visualization of the PPU's nametable RAM on a separate canvas.
-
-The PPU forces a sprite-0 hit on scanline 30, pixel 80 (to allow some more games to run).
+Currently seems to run some (most?) NROM games correctly.
 
 Currently only supports mapper 0 (NROM).
 

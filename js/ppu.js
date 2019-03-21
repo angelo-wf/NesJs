@@ -39,7 +39,7 @@ function Ppu(nes) {
   this.vramIncrement = 1;
   this.spritePatternBase = 0;
   this.bgPatternBase = 0;
-  this.sprite16 = false;
+  this.spriteHeight = 8;
   this.slave = false;
   this.generateNmi = false;
 
@@ -56,6 +56,10 @@ function Ppu(nes) {
   this.atr = 0;
   this.tl = 0;
   this.th = 0;
+  this.secondaryOam = new Uint8Array(0x20);
+  this.spriteZeroIn = false;
+  this.spriteTiles = new Uint8Array(0x10);
+  this.spriteCount = 0;
 
   this.pixelOutput = new Uint16Array(256 * 240); // final pixel output
 
@@ -88,7 +92,7 @@ function Ppu(nes) {
     this.vramIncrement = 1;
     this.spritePatternBase = 0;
     this.bgPatternBase = 0;
-    this.sprite16 = false;
+    this.spriteHeight = 8;
     this.slave = false;
     this.generateNmi = false;
     this.greyScale = false;
@@ -101,6 +105,14 @@ function Ppu(nes) {
     this.atr = 0;
     this.tl = 0;
     this.th = 0;
+    for(let i = 0; i < this.secondaryOam.length; i++) {
+      this.secondaryOam[i] = 0;
+    }
+    this.spriteZeroIn = false;
+    for(let i = 0; i < this.spriteTiles.length; i++) {
+      this.spriteTiles[i] = 0;
+    }
+    this.spriteCount = 0;
     // pixel output
     for(let i = 0; i < this.pixelOutput.length; i++) {
       this.pixelOutput[i] = 0;
@@ -110,37 +122,32 @@ function Ppu(nes) {
   this.cycle = function() {
     if(this.line < 240) {
       // visible frame
-
-      // TODO: sprites
-
-      if(this.line === 30 && this.dot === 80) {
-        // TEMPORARY HACK!!
-        this.spriteZero = true;
-      }
-
-      if(this.dot === 0) {
-        this.generateSliver();
-        if(this.bgRendering || this.sprRendering) {
-          this.readTileBuffers();
+      if(this.dot < 256) {
+        this.generateDot();
+        if(((this.dot + 1) & 0x7) === 0) {
+          // dot 7, 15, 23, 31 etc
+          if(this.bgRendering || this.sprRendering) {
+            this.readTileBuffers();
+            this.incrementVx();
+          }
         }
-      } else if(this.dot < 256 && (this.dot & 0x7) === 0) {
-        // every 8th cycle
-        this.generateSliver();
+      } else if(this.dot === 256) {
         if(this.bgRendering || this.sprRendering) {
+          this.incrementVy();
+        }
+      } else if(this.dot === 257) {
+        if(this.bgRendering || this.sprRendering) {
+          // copy x parts from t to v
+          this.v &= 0x7be0;
+          this.v |= (this.t & 0x41f);
+          // do sprite evaluation and sprite tile fetching
+          this.evaluateSprites();
+        }
+      } else if(this.dot === 321 || this.dot === 329) {
+        if (this.bgRendering || this.sprRendering) {
+          this.readTileBuffers();
           this.incrementVx();
-          this.readTileBuffers();
         }
-      } else if(this.dot === 256 && (this.bgRendering || this.sprRendering)) {
-        this.incrementVy();
-      } else if(this.dot === 257 && (this.bgRendering || this.sprRendering)) {
-        // copy x parts from t to v
-        this.v &= 0x7be0;
-        this.v |= (this.t & 0x41f);
-      } else if((this.dot === 321 || this.dot === 329) && (
-        this.bgRendering || this.sprRendering
-      )) {
-        this.readTileBuffers();
-        this.incrementVx();
       }
     } else if(this.line === 241) {
       if(this.dot === 1) {
@@ -158,19 +165,23 @@ function Ppu(nes) {
         this.inVblank = false;
         this.spriteZero = false;
         this.spriteOverflow = false;
-      } else if(this.dot === 257 && (this.bgRendering || this.sprRendering)) {
-        // copy x parts from t to v
-        this.v &= 0x7be0;
-        this.v |= (this.t & 0x41f);
-      } else if(this.dot === 280 && (this.bgRendering || this.sprRendering)) {
-        // copy y parts from t to v
-        this.v &= 0x41f;
-        this.v |= (this.t & 0x7be0);
-      } else if((this.dot === 321 || this.dot === 329) && (
-        this.bgRendering || this.sprRendering
-      )) {
-        this.readTileBuffers();
-        this.incrementVx();
+      } else if(this.dot === 257) {
+        if(this.bgRendering || this.sprRendering) {
+          // copy x parts from t to v
+          this.v &= 0x7be0;
+          this.v |= (this.t & 0x41f);
+        }
+      } else if(this.dot === 280) {
+        if(this.bgRendering || this.sprRendering) {
+          // copy y parts from t to v
+          this.v &= 0x41f;
+          this.v |= (this.t & 0x7be0);
+        }
+      } else if(this.dot === 321 || this.dot === 329) {
+        if(this.bgRendering || this.sprRendering) {
+          this.readTileBuffers();
+          this.incrementVx();
+        }
       }
     }
 
@@ -185,6 +196,48 @@ function Ppu(nes) {
         this.line = 0;
       }
     }
+  }
+
+  this.evaluateSprites = function() {
+    this.spriteZeroIn = false;
+    this.spriteCount = 0;
+    for(let i = 0; i < 256; i += 4) {
+      let sprY = this.oamRam[i];
+      let sprRow = this.line - sprY;
+      if(sprRow >= 0 && sprRow < 8) {
+        // TODO: handle 8*16 sprites
+        // sprite is on this scanline
+        if(this.spriteCount === 8) {
+          // secondary oam is full
+          this.spriteOverflow = true;
+          break;
+        } else {
+          // place in secondary oam
+          if(i === 0) {
+            // sprite zero
+            this.spriteZeroIn = true;
+          }
+          this.secondaryOam[this.spriteCount * 4] = this.oamRam[i];
+          this.secondaryOam[this.spriteCount * 4 + 1] = this.oamRam[i + 1];
+          this.secondaryOam[this.spriteCount * 4 + 2] = this.oamRam[i + 2];
+          this.secondaryOam[this.spriteCount * 4 + 3] = this.oamRam[i + 3];
+          // fetch the tiles
+          // TODO: handle 8*16 sprites
+          if((this.oamRam[i + 2] & 0x80) > 0) {
+            sprRow = 7 - sprRow;
+          }
+          let tileNum = this.oamRam[i + 1];
+          this.spriteTiles[this.spriteCount] = this.readInternal(
+            this.spritePatternBase + tileNum * 16 + sprRow
+          );
+          this.spriteTiles[this.spriteCount + 8] = this.readInternal(
+            this.spritePatternBase + tileNum * 16 + sprRow + 8
+          );
+          this.spriteCount++;
+        }
+      }
+    }
+
   }
 
   this.readTileBuffers = function() {
@@ -218,37 +271,107 @@ function Ppu(nes) {
     );
   }
 
-  this.generateSliver = function() {
-    for(let i = 0; i < 8; i++) {
-      let finalColor;
-      if(this.bgRendering) {
-        let shiftAmount = 15 - i - this.x;
-        let final = (this.tl & (1 << shiftAmount)) >> (shiftAmount);
-        final |= ((this.th & (1 << shiftAmount)) >> shiftAmount) << 1;
-        let atrOff;
-        if(this.x + i > 7) {
-          // right tile
-          atrOff = this.atr * 4;
-        } else {
-          atrOff = this.atl * 4;
-        }
-        if(final === 0) {
-          // background color
-          finalColor = this.readPalette(0);
-        } else {
-          finalColor = this.readPalette(atrOff + final);
-        }
-      } else {
-        if((this.v & 0x3fff) >= 0x3f00) {
-          finalColor = this.readPalette(this.v & 0x1f);
-        } else {
-          finalColor = this.readPalette(0);
+  this.generateDot = function() {
+    let i = this.dot & 0x7;
+    let bgPixel = 0;
+    let sprPixel = 0;
+    let sprNum = -1;
+    let sprPriority = 0;
+    let finalColor;
+
+    if(this.sprRendering && (this.dot > 7 || this.sprInLeft)) {
+      // if sprite rendering is on, and either not the left 8 pixels
+      // or sprite rendering in left 8 pixels is on
+      // search through all sprites in secondary oam to find ones
+      // on this dot, and pick the first non-0 pixel
+      for(let j = 0; j < this.spriteCount; j++) {
+        let xPos = this.secondaryOam[j * 4 + 3];
+        let xCol = this.dot - xPos;
+        if(xCol >= 0 && xCol < 8) {
+          // sprite is in range
+          if((this.secondaryOam[j * 4 + 2] & 0x40) > 0) {
+            xCol = 7 - xCol;
+          }
+          let shift = 7 - xCol;
+          let pixel = (this.spriteTiles[j] & (1 << shift)) >> shift;
+          pixel |= ((this.spriteTiles[j + 8] & (1 << shift)) >> shift) << 1;
+          if(pixel > 0) {
+            // set the pixel, priority, and number
+            sprPixel = pixel | ((this.secondaryOam[j * 4 + 2] & 0x3) << 2);
+            sprPriority = (this.secondaryOam[j * 4 + 2] & 0x20) >> 5;
+            sprNum = j;
+            break;
+          }
         }
       }
-      this.pixelOutput[
-        this.line * 256 + this.dot + i
-      ] = (this.emphasis << 6) | (finalColor & 0x3f);
     }
+
+    if(this.bgRendering && (this.dot > 7 || this.bgInLeft)) {
+      // if bg rendering is on, and either not the left 8 pixels
+      // or bg rendering in left 8 columns is on
+      let shiftAmount = 15 - i - this.x;
+      bgPixel = (this.tl & (1 << shiftAmount)) >> shiftAmount;
+      bgPixel |= ((this.th & (1 << shiftAmount)) >> shiftAmount) << 1;
+      let atrOff;
+      if(this.x + i > 7) {
+        // right tile
+        atrOff = this.atr * 4;
+      } else {
+        atrOff = this.atl * 4;
+      }
+      if(bgPixel > 0) {
+        bgPixel += atrOff;
+      }
+    }
+
+    if(!this.bgRendering && !this.sprRendering) {
+      // display color 0, or color at vram address if pointing to palette
+      if((this.v & 0x3fff) >= 0x3f00) {
+        finalColor = this.readPalette(this.v & 0x1f);
+      } else {
+        finalColor = this.readPalette(0);
+      }
+    } else {
+      if(!this.bgRendering) {
+        // sprite rendering has to be on
+        if(sprPixel > 0) {
+          finalColor = this.readPalette(sprPixel + 0x10);
+        } else {
+          finalColor = this.readPalette(0);
+        }
+      } else {
+        if(!this.sprRendering) {
+          finalColor = this.readPalette(bgPixel);
+        } else {
+          // sprite and bg
+          // if bg pixel is 0, render sprite pixel
+          if(bgPixel === 0) {
+            if(sprPixel > 0) {
+              finalColor = this.readPalette(sprPixel + 0x10);
+            } else {
+              finalColor = this.readPalette(0);
+            }
+          } else {
+            // render sprite pixel if not 0 and it has priority
+            if(sprPixel > 0) {
+              // check for sprite zero
+              if(sprNum === 0 && this.spriteZeroIn) {
+                this.spriteZero = true;
+              }
+            }
+            if(sprPixel > 0 && sprPriority === 0) {
+              finalColor = this.readPalette(sprPixel + 0x10);
+            } else {
+              finalColor = this.readPalette(bgPixel);
+            }
+          }
+        }
+      }
+    }
+
+    this.pixelOutput[
+      this.line * 256 + this.dot
+    ] = (this.emphasis << 6) | (finalColor & 0x3f);
   }
 
   this.setFrame = function(finalArray) {
@@ -308,6 +431,7 @@ function Ppu(nes) {
   }
 
   this.readInternal = function(adr) {
+    adr &= 0x3fff;
     let readVal = this.nes.mapper.ppuRead(adr);
     if(readVal[0]) {
       return readVal[1];
@@ -317,6 +441,7 @@ function Ppu(nes) {
   }
 
   this.writeInternal = function(adr, value) {
+    adr &= 0x3fff;
     let writeVal = this.nes.mapper.ppuWrite(adr, value);
     if(writeVal[0]) {
       return;
@@ -326,7 +451,12 @@ function Ppu(nes) {
   }
 
   this.readPalette = function(adr) {
-    let ret = this.paletteRam[adr & 0x1f];
+    let palAdr = adr & 0x1f;
+    if(palAdr >= 0x10 && (palAdr & 0x3) === 0) {
+      // 0x10, 0x14, 0x18 and 0x1c are mirrored to 0, 4, 8 and 0xc
+      palAdr -= 0x10;
+    }
+    let ret = this.paletteRam[palAdr];
     if(this.greyScale) {
       ret &= 0x30;
     }
@@ -422,7 +552,11 @@ function Ppu(nes) {
         } else {
           this.bgPatternBase = 0;
         }
-        this.sprite16 = (value & 0x20) > 0;
+        if((value & 0x20) > 0) {
+          this.spriteHeight = 16;
+        } else {
+          this.spriteHeight = 8;
+        }
         this.slave = (value & 0x40) > 0;
         this.generateNmi = (value & 0x80) > 0;
         return;
