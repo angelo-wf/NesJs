@@ -27,6 +27,10 @@ function Nes() {
   this.controllerLatched = false;
 
   this.loadRom = function(rom) {
+    if(rom.length < 0x10) {
+      log("Invalid rom loaded");
+      return false;
+    }
     if(
       rom[0] !== 0x4e || rom[1] !== 0x45 ||
       rom[2] !== 0x53 || rom[3] !== 0x1a
@@ -34,17 +38,43 @@ function Nes() {
       log("Invalid rom loaded");
       return false;
     }
-    let mapper = (rom[6] >> 4) | (rom[7] & 0xf0);
-    if(mapper !== 0) {
-      log("Unsupported mapper: " + mapper);
+    let header = this.parseHeader(rom);
+    try {
+      switch(header.mapper) {
+        case 0: {
+          this.mapper = new Nrom(this, rom, header);
+          break;
+        }
+        case 1: {
+          this.mapper = new Mmc1(this, rom, header);
+          break;
+        }
+        default: {
+          log("Unsupported mapper: " + header.mapper);
+          return;
+        }
+      }
+    } catch(e) {
+      log("Rom load error: " + e);
       return false;
     }
-    this.mapper = new Nrom(this, rom);
     log(
-      "Loaded NROM rom: " + this.mapper.banks + " PRG bank(s), " +
-      this.mapper.chrBanks + " CHR bank(s)"
+      "Loaded " + this.mapper.name + " rom: " + this.mapper.banks +
+      " PRG bank(s), " + this.mapper.chrBanks + " CHR bank(s)"
     );
     return true;
+  }
+
+  this.parseHeader = function(rom) {
+    return {
+      banks: rom[4],
+      chrBanks: rom[5],
+      mapper: (rom[6] >> 4) | (rom[7] & 0xf0),
+      verticalMirroring: (rom[6] & 0x01) > 0,
+      battery: (rom[6] & 0x02) > 0,
+      trainer: (rom[6] & 0x04) > 0,
+      fourScreen: (rom[6] & 0x08) > 0,
+    };
   }
 
   this.getPixels = function(data) {

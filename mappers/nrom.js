@@ -1,19 +1,22 @@
 
-function Nrom(nes, rom) {
+function Nrom(nes, rom, header) {
+  this.name = "NROM";
 
   this.nes = nes;
 
   this.rom = rom;
 
-  this.banks = rom[4];
-  this.chrBanks = rom[5];
-  this.verticalMirroring = (rom[6] & 1) > 0;
+  this.banks = header.banks;
+  this.chrBanks = header.chrBanks;
+  this.verticalMirroring = header.verticalMirroring;
+  this.base = 0x10 + (header.trainer ? 512 : 0);
+
+  let neededLength = this.base + 0x4000 * this.banks + 0x2000 * this.chrBanks;
+  if(this.rom.length < neededLength) {
+    throw new Error("rom is not complete");
+  }
 
   this.chrRam = new Uint8Array(0x2000);
-  this.hasChrRam = false
-  if(this.chrBanks === 0) {
-    this.hasChrRam = true;
-  }
 
   this.prgRam = new Uint8Array(0x2000);
 
@@ -36,9 +39,9 @@ function Nrom(nes, rom) {
       return this.prgRam[adr & 0x1fff];
     }
     if(this.banks === 2) {
-      return this.rom[0x10 + (adr & 0x7fff)];
+      return this.rom[this.base + (adr & 0x7fff)];
     } else {
-      return this.rom[0x10 + (adr & 0x3fff)];
+      return this.rom[this.base + (adr & 0x3fff)];
     }
   }
 
@@ -53,10 +56,10 @@ function Nrom(nes, rom) {
   // or else the value itself
   this.ppuRead = function(adr) {
     if(adr < 0x2000) {
-      if(this.hasChrRam) {
+      if(this.chrBanks === 0) {
         return [true, this.chrRam[adr]];
       } else {
-        return [true, this.rom[0x10 + 0x4000 * this.banks + adr]];
+        return [true, this.rom[this.base + 0x4000 * this.banks + adr]];
       }
     } else {
       if(this.verticalMirroring) {
@@ -72,7 +75,7 @@ function Nrom(nes, rom) {
   // or else only that the write happened
   this.ppuWrite = function(adr, value) {
     if(adr < 0x2000) {
-      if(this.hasChrRam) {
+      if(this.chrBanks === 0) {
         this.chrRam[adr] = value;
         return [true, 0];
       } else {

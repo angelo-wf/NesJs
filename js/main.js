@@ -62,7 +62,6 @@ el("rom").onchange = function(e) {
                 breader.onload = function() {
                   let rbuf = breader.result;
                   let arr = new Uint8Array(rbuf);
-                  console.log(arr.slice(0, 0x10));
                   loadRom(arr);
                   reader.close(function() {});
                 }
@@ -175,7 +174,6 @@ function el(id) {
 }
 
 window.onkeydown = function(e) {
-  console.log(e.key);
   if(controlsP1[e.key.toLowerCase()]) {
     nes.currentControl1State |= controlsP1[e.key.toLowerCase()];
     e.preventDefault();

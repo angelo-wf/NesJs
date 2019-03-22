@@ -207,8 +207,7 @@ function Ppu(nes) {
     for(let i = 0; i < 256; i += 4) {
       let sprY = this.oamRam[i];
       let sprRow = this.line - sprY;
-      if(sprRow >= 0 && sprRow < 8) {
-        // TODO: handle 8*16 sprites
+      if(sprRow >= 0 && sprRow < this.spriteHeight) {
         // sprite is on this scanline
         if(this.spriteCount === 8) {
           // secondary oam is full
@@ -225,16 +224,22 @@ function Ppu(nes) {
           this.secondaryOam[this.spriteCount * 4 + 2] = this.oamRam[i + 2];
           this.secondaryOam[this.spriteCount * 4 + 3] = this.oamRam[i + 3];
           // fetch the tiles
-          // TODO: handle 8*16 sprites
           if((this.oamRam[i + 2] & 0x80) > 0) {
-            sprRow = 7 - sprRow;
+            sprRow = this.spriteHeight - 1 - sprRow;
           }
+          let base = this.spritePatternBase;
           let tileNum = this.oamRam[i + 1];
+          if(this.spriteHeight === 16) {
+            base = (tileNum & 0x1) * 0x1000;
+            tileNum = (tileNum & 0xfe);
+            tileNum += (sprRow > 7) ? 1 : 0;
+            sprRow &= 0x7;
+          }
           this.spriteTiles[this.spriteCount] = this.readInternal(
-            this.spritePatternBase + tileNum * 16 + sprRow
+            base + tileNum * 16 + sprRow
           );
           this.spriteTiles[this.spriteCount + 8] = this.readInternal(
-            this.spritePatternBase + tileNum * 16 + sprRow + 8
+            base + tileNum * 16 + sprRow + 8
           );
           this.spriteCount++;
         }

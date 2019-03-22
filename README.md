@@ -4,9 +4,9 @@ Yet another NES emulator, in javascript.
 
 In development.
 
-The CPU emulation seems to be mostly functional, although none of the undocumented opcodes are implemented (yet). The PPU emulation also seems to be mostly functional, except for 8*16 sprite mode. There is no APU emulation (yet?).
+The CPU emulation seems to be mostly functional, although none of the undocumented opcodes are implemented (yet). The PPU emulation also seems to be mostly functional. There is no APU emulation (yet?).
 
-Currently only supports mapper 0 (NROM).
+Supports mapper 0 (NROM) and 1 (MMC1).
 
 Controllers 1 and 2 are emulated, with the following mapping:
 
