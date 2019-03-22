@@ -10,25 +10,62 @@ c.height = 240;
 let ctx = c.getContext("2d");
 let imgData = ctx.createImageData(256, 240);
 
+zip.workerScriptsPath = "lib/";
+zip.useWebWorkers = false;
+
 // let c2 = el("nametables");
 // c2.width = 8 * 32;
 // c2.height = 8 * 64;
 // let ctx2 = c2.getContext("2d");
 
 el("rom").onchange = function(e) {
-  let reader = new FileReader();
-  reader.onload = function() {
-    let buf = reader.result;
-    let arr = new Uint8Array(buf);
-    if(nes.loadRom(arr)) {
-      nes.hardReset();
-      if(!loaded && !paused) {
-        loopId = setInterval(update, 1000 / 60);
-      }
-      loaded = true;
+  let freader = new FileReader();
+  freader.onload = function() {
+    let buf = freader.result;
+    if(e.target.files[0].name.slice(-4) === ".zip") {
+      // use zip.js to read the zip
+      let blob = new Blob([buf]);
+      zip.createReader(new zip.BlobReader(blob), function(reader) {
+        reader.getEntries(function(entries) {
+          if(entries.length) {
+            let found = false;
+            for(let i = 0; i < entries.length; i++) {
+              let name = entries[i].filename;
+              if(name.slice(-4) !== ".nes" && name.slice(-4) !== ".NES") {
+                continue;
+              }
+              found = true;
+              log("Loaded \"" + name + "\" from zip");
+              entries[i].getData(new zip.BlobWriter(), function(blob) {
+                let breader = new FileReader();
+                breader.onload = function() {
+                  let rbuf = breader.result;
+                  let arr = new Uint8Array(rbuf);
+                  console.log(arr.slice(0, 0x10));
+                  loadRom(arr);
+                  reader.close(function() {});
+                }
+                breader.readAsArrayBuffer(blob);
+              }, function(curr, total) {});
+              break;
+            }
+            if(!found) {
+              log("No .nes file found in zip");
+            }
+          } else {
+            log("Zip file was empty");
+          }
+        });
+      }, function(err) {
+        log("Failed to read zip: " + err);
+      });
+    } else {
+      // load rom normally
+      let arr = new Uint8Array(buf);
+      loadRom(arr);
     }
   }
-  reader.readAsArrayBuffer(e.target.files[0]);
+  freader.readAsArrayBuffer(e.target.files[0]);
 }
 
 el("pause").onclick = function(e) {
@@ -53,6 +90,16 @@ el("hardreset").onclick = function(e) {
 
 el("runframe").onclick = function(e) {
   update();
+}
+
+function loadRom(rom) {
+  if(nes.loadRom(rom)) {
+    nes.hardReset();
+    if(!loaded && !paused) {
+      loopId = setInterval(update, 1000 / 60);
+    }
+    loaded = true;
+  }
 }
 
 function update() {
