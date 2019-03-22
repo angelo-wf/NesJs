@@ -9,6 +9,7 @@ The CPU emulation seems to be mostly functional, although none of the undocument
 Currently only supports mapper 0 (NROM).
 
 Controllers 1 and 2 are emulated, with the following mapping:
+
 | Button | Controller 1 | controller 2 |
 | ------ | ------------ | ------------ |
 | Left   | Left arrow   | J            |
@@ -18,7 +19,7 @@ Controllers 1 and 2 are emulated, with the following mapping:
 | Start  | Enter        | P            |
 | Select | Shift        | O            |
 | B      | A            | T            |
-| A      | Z            | G            | 
+| A      | Z            | G            |
 
 Roms can be loaded from zip-files as well, which will load the first file with a .nes extension it can find.
 
