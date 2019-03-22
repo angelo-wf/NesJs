@@ -20,8 +20,10 @@ function Nes() {
   this.dmaValue = 0;
 
   // controller
-  this.currentControlState = 0;
-  this.latchedControlState = 0;
+  this.currentControl1State = 0;
+  this.latchedControl1State = 0;
+  this.currentControl2State = 0;
+  this.latchedControl2State = 0;
   this.controllerLatched = false;
 
   this.loadRom = function(rom) {
@@ -67,7 +69,8 @@ function Nes() {
     this.dmaTimer = 0;
     this.dmaBase = 0;
     this.dmaValue = 0;
-    this.latchedControlState = 0;
+    this.latchedControl1State = 0;
+    this.latchedControl2State = 0;
     this.controllerLatched = false;
   }
 
@@ -77,7 +80,8 @@ function Nes() {
 
       // handle controller latch
       if(this.controllerLatched) {
-        this.latchedControlState = this.currentControlState;
+        this.latchedControl1State = this.currentControl1State;
+        this.latchedControl2State = this.currentControl2State;
       }
 
       if(!this.inDma) {
@@ -85,7 +89,7 @@ function Nes() {
       } else {
         // handle dma
         if(this.dmaTimer > 0) {
-          if((this.dmaTimer & 1) == 0) {
+          if((this.dmaTimer & 1) === 0) {
             // even cycles are write to ppu
             this.ppu.write(4, this.dmaValue);
           } else {
@@ -96,7 +100,7 @@ function Nes() {
           }
         }
         this.dmaTimer++;
-        if(this.dmaTimer == 514) {
+        if(this.dmaTimer === 513) {
           this.dmaTimer = 0;
           this.inDma = false;
         }
@@ -130,9 +134,15 @@ function Nes() {
         return 0; // not readable
       }
       if(adr === 0x4016) {
-        let ret = this.latchedControlState & 1;
-        this.latchedControlState >>= 1;
-        this.latchedControlState |= 0x80; // set bit 7
+        let ret = this.latchedControl1State & 1;
+        this.latchedControl1State >>= 1;
+        this.latchedControl1State |= 0x80; // set bit 7
+        return ret;
+      }
+      if(adr === 0x4017) {
+        let ret = this.latchedControl2State & 1;
+        this.latchedControl2State >>= 1;
+        this.latchedControl2State |= 0x80; // set bit 7
         return ret;
       }
       return 0; //not inplemented yet

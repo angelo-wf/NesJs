@@ -8,7 +8,17 @@ The CPU emulation seems to be mostly functional, although none of the undocument
 
 Currently only supports mapper 0 (NROM).
 
-Controller 1 is emulated, using the arrow keys for the d-pad, enter for Start, shift for Select, the A key for B and the Z key for A.
+Controllers 1 and 2 are emulated, with the following mapping:
+| Button | Controller 1 | controller 2 |
+| ------ | ------------ | ------------ |
+| Left   | Left arrow   | J            |
+| Right  | Right arrow  | L            |
+| Up     | Up arrow     | I            |
+| Down   | Down arrow   | K            |
+| Start  | Enter        | P            |
+| Select | Shift        | O            |
+| B      | A            | T            |
+| A      | Z            | G            | 
 
 Roms can be loaded from zip-files as well, which will load the first file with a .nes extension it can find.
 

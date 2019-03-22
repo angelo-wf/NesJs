@@ -10,6 +10,27 @@ c.height = 240;
 let ctx = c.getContext("2d");
 let imgData = ctx.createImageData(256, 240);
 
+let controlsP1 = {
+  arrowright: 0x80, // right
+  arrowleft: 0x40, // left
+  arrowdown: 0x20, // down
+  arrowup: 0x10, // up
+  enter: 0x08, // start
+  shift: 0x04, // select
+  a: 0x02, // b
+  z: 0x01 // a
+}
+let controlsP2 = {
+  l: 0x80, // right
+  j: 0x40, // left
+  k: 0x20, // down
+  i: 0x10, // up
+  p: 0x08, // start
+  o: 0x04, // select
+  t: 0x02, // b
+  g: 0x01 // a
+}
+
 zip.workerScriptsPath = "lib/";
 zip.useWebWorkers = false;
 
@@ -154,95 +175,24 @@ function el(id) {
 }
 
 window.onkeydown = function(e) {
-  switch(e.key) {
-    case "ArrowRight": {
-      nes.currentControlState |= 0x80;
-      e.preventDefault();
-      break;
-    }
-    case "ArrowLeft": {
-      nes.currentControlState |= 0x40;
-      e.preventDefault();
-      break;
-    }
-    case "ArrowDown": {
-      nes.currentControlState |= 0x20;
-      e.preventDefault();
-      break;
-    }
-    case "ArrowUp": {
-      nes.currentControlState |= 0x10;
-      e.preventDefault();
-      break;
-    }
-    case "Enter": {
-      nes.currentControlState |= 0x08;
-      e.preventDefault();
-      break;
-    }
-    case "Shift": {
-      nes.currentControlState |= 0x04;
-      e.preventDefault();
-      break;
-    }
-    case "a":
-    case "A": {
-      nes.currentControlState |= 0x02;
-      e.preventDefault();
-      break;
-    }
-    case "z":
-    case "Z": {
-      nes.currentControlState |= 0x01;
-      e.preventDefault();
-      break;
-    }
+  console.log(e.key);
+  if(controlsP1[e.key.toLowerCase()]) {
+    nes.currentControl1State |= controlsP1[e.key.toLowerCase()];
+    e.preventDefault();
+  }
+  if(controlsP2[e.key.toLowerCase()]) {
+    nes.currentControl2State |= controlsP2[e.key.toLowerCase()];
+    e.preventDefault();
   }
 }
 
 window.onkeyup = function(e) {
-  switch(e.key) {
-    case "ArrowRight": {
-      nes.currentControlState &= 0x7f;
-      e.preventDefault();
-      break;
-    }
-    case "ArrowLeft": {
-      nes.currentControlState &= 0xbf;
-      e.preventDefault();
-      break;
-    }
-    case "ArrowDown": {
-      nes.currentControlState &= 0xdf;
-      e.preventDefault();
-      break;
-    }
-    case "ArrowUp": {
-      nes.currentControlState &= 0xef;
-      e.preventDefault();
-      break;
-    }
-    case "Enter": {
-      nes.currentControlState &= 0xf7;
-      e.preventDefault();
-      break;
-    }
-    case "Shift": {
-      nes.currentControlState &= 0xfb;
-      e.preventDefault();
-      break;
-    }
-    case "a":
-    case "A": {
-      nes.currentControlState &= 0xfd;
-      e.preventDefault();
-      break;
-    }
-    case "z":
-    case "Z": {
-      nes.currentControlState &= 0xfe;
-      e.preventDefault();
-      break;
-    }
+  if(controlsP1[e.key.toLowerCase()]) {
+    nes.currentControl1State &= (~controlsP1[e.key.toLowerCase()]) & 0xff;
+    e.preventDefault();
+  }
+  if(controlsP2[e.key.toLowerCase()]) {
+    nes.currentControl2State &= (~controlsP2[e.key.toLowerCase()]) & 0xff;
+    e.preventDefault();
   }
 }
