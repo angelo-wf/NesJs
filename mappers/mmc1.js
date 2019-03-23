@@ -117,6 +117,8 @@ function Mmc1(nes, rom, header) {
     }
   }
 
+  this.ppuLineEnd = function() {};
+
   this.read = function(adr) {
     if(adr < 0x6000) {
       return 0; // not readable

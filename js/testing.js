@@ -21,7 +21,7 @@ let intervalId;
 function test(buffer) {
   let mem = new MemHandler(nesTestRom);
   cpu = new Cpu(mem);
-  cpu.hardReset();
+  cpu.reset();
   cpu.br[PC] = 0xc000;
   cycles = 0;
   line = 0;
@@ -71,7 +71,7 @@ function loop1k() {
     cycles++;
   }
   log(str)
-  el("spot").innerHTML = cycles;
+  log("Cycles done: " + cycles);
 }
 
 function checkLogStr(fullLine, partLine) {

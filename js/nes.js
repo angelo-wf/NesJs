@@ -57,6 +57,10 @@ function Nes() {
           this.mapper = new Cnrom(this, rom, header);
           break;
         }
+        case 4: {
+          this.mapper = new Mmc3(this, rom, header);
+          break;
+        }
         default: {
           log("Unsupported mapper: " + header.mapper);
           return;

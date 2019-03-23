@@ -140,6 +140,12 @@ function Ppu(nes) {
           // copy x parts from t to v
           this.v &= 0x7be0;
           this.v |= (this.t & 0x41f);
+        }
+      } else if(this.dot === 260) {
+        if(this.bgRendering || this.sprRendering) {
+          // notify mapper that we're at the end of the line
+          // TODO: inaccurate timing
+          this.nes.mapper.ppuLineEnd();
           // do sprite evaluation and sprite tile fetching
           this.evaluateSprites();
         }
@@ -170,6 +176,12 @@ function Ppu(nes) {
           // copy x parts from t to v
           this.v &= 0x7be0;
           this.v |= (this.t & 0x41f);
+        }
+      } else if(this.dot === 260) {
+        if(this.bgRendering || this.sprRendering) {
+          // notify mapper that we're at the end of the line
+          // TODO: inaccurate timing
+          this.nes.mapper.ppuLineEnd();
           // clear sprite buffers from sprites evaluated on line 239
           this.spriteZeroIn = false;
           this.spriteCount = 0;
