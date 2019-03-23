@@ -6,7 +6,7 @@ In development.
 
 The CPU emulation seems to be mostly functional, although none of the undocumented opcodes are implemented (yet). The PPU emulation also seems to be mostly functional. There is no APU emulation (yet?).
 
-Supports mapper 0 (NROM) and 1 (MMC1).
+Supports mapper 0 (NROM), 1 (MMC1), 2 (UxROM) and 3 (CNROM).
 
 Controllers 1 and 2 are emulated, with the following mapping:
 

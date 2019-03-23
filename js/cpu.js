@@ -326,7 +326,7 @@ function Cpu(mem) {
         // relative to PC, for branches
         let adr = this.mem.read(this.br[PC]++);
         let flag = false;
-        if((this.br[PC] >> 8) < (this.br[PC] + this.getSigned(adr) >> 8)) {
+        if((this.br[PC] >> 8) !== ((this.br[PC] + this.getSigned(adr)) >> 8)) {
           flag = true;
         }
         return [(this.br[PC] + this.getSigned(adr)) & 0xffff, flag];

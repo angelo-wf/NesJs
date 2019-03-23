@@ -56,23 +56,44 @@ function Mmc1(nes, rom, header) {
       case 0:
       case 1: {
         let bank = (this.prgBank & (this.banks - 1)) >> 1;
-        return this.base + 0x8000 * bank + (adr & 0x7fff);
+        return 0x8000 * bank + (adr & 0x7fff);
       }
       case 2: {
         let bank = this.prgBank & (this.banks - 1);
         if(adr < 0xc000) {
-          return this.base + (adr & 0x3fff);
+          return adr & 0x3fff;
         } else {
-          return this.base + bank * 0x4000 + (adr & 0x3fff);
+          return bank * 0x4000 + (adr & 0x3fff);
         }
       }
       case 3: {
         let bank = this.prgBank & (this.banks - 1);
         if(adr < 0xc000) {
-          return this.base + bank * 0x4000 + (adr & 0x3fff);
+          return bank * 0x4000 + (adr & 0x3fff);
         } else {
-          return this.base + (this.banks - 1) * 0x4000 + (adr & 0x3fff);
+          return (this.banks - 1) * 0x4000 + (adr & 0x3fff);
         }
+      }
+    }
+  }
+
+  this.getMirroringAdr = function(adr) {
+    switch(this.mirroring) {
+      case 0: {
+        // 1-screen A
+        return adr & 0x3ff;
+      }
+      case 1: {
+        // 1-screen B
+        return 0x400 + (adr & 0x3ff);
+      }
+      case 2: {
+        // vertical
+        return adr & 0x7ff;
+      }
+      case 3: {
+        // horizontal
+        return (adr & 0x3ff) | ((adr & 0x800) >> 1);
       }
     }
   }
@@ -106,7 +127,7 @@ function Mmc1(nes, rom, header) {
       }
       return this.prgRam[adr & 0x1fff];
     }
-    return this.rom[this.getRomAdr(adr)];
+    return this.rom[this.base + this.getRomAdr(adr)];
   }
 
   this.write = function(adr, value) {
@@ -166,24 +187,7 @@ function Mmc1(nes, rom, header) {
         ]];
       }
     } else {
-      switch(this.mirroring) {
-        case 0: {
-          // 1-screen A
-          return [false, (adr & 0x3ff)];
-        }
-        case 1: {
-          // 1-screen B
-          return [false, 0x800 + (adr & 0x7ff)];
-        }
-        case 2: {
-          // vertical
-          return [false, (adr & 0x7ff)];
-        }
-        case 3: {
-          // horizontal
-          return [false, ((adr & 0x3ff) | ((adr & 0x800) >> 1))];
-        }
-      }
+      return [false, this.getMirroringAdr(adr)];
     }
   }
 
@@ -199,24 +203,7 @@ function Mmc1(nes, rom, header) {
         return [true, 0];
       }
     } else {
-      switch(this.mirroring) {
-        case 0: {
-          // 1-screen A
-          return [false, (adr & 0x3ff)];
-        }
-        case 1: {
-          // 1-screen B
-          return [false, 0x800 + (adr & 0x7ff)];
-        }
-        case 2: {
-          // vertical
-          return [false, (adr & 0x7ff)];
-        }
-        case 3: {
-          // horizontal
-          return [false, ((adr & 0x3ff) | ((adr & 0x800) >> 1))];
-        }
-      }
+      return [false, this.getMirroringAdr(adr)];
     }
   }
 
