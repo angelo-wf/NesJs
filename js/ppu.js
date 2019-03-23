@@ -142,6 +142,9 @@ function Ppu(nes) {
           this.v |= (this.t & 0x41f);
         }
       } else if(this.dot === 260) {
+        // clear sprite buffers
+        this.spriteZeroIn = false;
+        this.spriteCount = 0;
         if(this.bgRendering || this.sprRendering) {
           // notify mapper that we're at the end of the line
           // TODO: inaccurate timing
@@ -178,13 +181,13 @@ function Ppu(nes) {
           this.v |= (this.t & 0x41f);
         }
       } else if(this.dot === 260) {
+        // clear sprite buffers from sprites evaluated on line 239
+        this.spriteZeroIn = false;
+        this.spriteCount = 0;
         if(this.bgRendering || this.sprRendering) {
           // notify mapper that we're at the end of the line
           // TODO: inaccurate timing
           this.nes.mapper.ppuLineEnd();
-          // clear sprite buffers from sprites evaluated on line 239
-          this.spriteZeroIn = false;
-          this.spriteCount = 0;
         }
       } else if(this.dot === 280) {
         if(this.bgRendering || this.sprRendering) {
@@ -214,8 +217,6 @@ function Ppu(nes) {
   }
 
   this.evaluateSprites = function() {
-    this.spriteZeroIn = false;
-    this.spriteCount = 0;
     for(let i = 0; i < 256; i += 4) {
       let sprY = this.oamRam[i];
       let sprRow = this.line - sprY;
