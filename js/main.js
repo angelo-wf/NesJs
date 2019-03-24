@@ -90,11 +90,10 @@ el("rom").onchange = function(e) {
 
 el("pause").onclick = function(e) {
   if(paused && loaded) {
-    loopId = setInterval(update, 1000 / 60);
+    requestAnimationFrame(update);
     paused = false;
     el("pause").innerText = "Pause";
   } else {
-    clearInterval(loopId);
     paused = true;
     el("pause").innerText = "Continue";
   }
@@ -109,24 +108,31 @@ el("hardreset").onclick = function(e) {
 }
 
 el("runframe").onclick = function(e) {
-  update();
+  if(loaded) {
+    runFrame();
+  }
 }
 
 function loadRom(rom) {
   if(nes.loadRom(rom)) {
     nes.hardReset();
     if(!loaded && !paused) {
-      loopId = setInterval(update, 1000 / 60);
+      requestAnimationFrame(update);
     }
     loaded = true;
   }
 }
 
 function update() {
+  runFrame();
+  if(!paused) {
+    requestAnimationFrame(update);
+  }
+}
+
+function runFrame() {
   nes.runFrame();
   drawPixels();
-  //visualizeNametable(nes.ppu.ppuRam);
-  //visualizeSrites(nes.ppu.oamRam);
 }
 
 function visualizeNametable(tbl) {
