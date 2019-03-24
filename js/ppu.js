@@ -141,7 +141,7 @@ function Ppu(nes) {
           this.v &= 0x7be0;
           this.v |= (this.t & 0x41f);
         }
-      } else if(this.dot === 260) {
+      } else if(this.dot === 270) {
         // clear sprite buffers
         this.spriteZeroIn = false;
         this.spriteCount = 0;
@@ -180,7 +180,7 @@ function Ppu(nes) {
           this.v &= 0x7be0;
           this.v |= (this.t & 0x41f);
         }
-      } else if(this.dot === 260) {
+      } else if(this.dot === 270) {
         // clear sprite buffers from sprites evaluated on line 239
         this.spriteZeroIn = false;
         this.spriteCount = 0;
@@ -401,21 +401,28 @@ function Ppu(nes) {
       let r = this.nesPal[color & 0x3f][0];
       let g = this.nesPal[color & 0x3f][1];
       let b = this.nesPal[color & 0x3f][2];
+      // from https://forums.nesdev.com/viewtopic.php?f=3&t=18416#p233708
       if((color & 0x40) > 0) {
         // emphasize red
-        g = (g * 0.75) & 0xff;
-        b = (b * 0.75) & 0xff;
+        r = r * 1.1;
+        g = g * 0.9;
+        b = b * 0.9;
       }
       if((color & 0x80) > 0) {
         // emphasize green
-        r = (r * 0.75) & 0xff;
-        b = (b * 0.75) & 0xff;
+        r = r * 0.9;
+        g = g * 1.1;
+        b = b * 0.9;
       }
       if((color & 0x100) > 0) {
         // emphasize blue
-        g = (g * 0.75) & 0xff;
-        r = (r * 0.75) & 0xff;
+        r = r * 0.9;
+        g = g * 0.9;
+        b = b * 1.1;
       }
+      r = (r > 255 ? 255 : r) & 0xff;
+      g = (g > 255 ? 255 : g) & 0xff;
+      b = (b > 255 ? 255 : b) & 0xff;
       finalArray[i * 4] = r;
       finalArray[i * 4 + 1] = g;
       finalArray[i * 4 + 2] = b;
@@ -423,6 +430,7 @@ function Ppu(nes) {
     }
   }
 
+  // from https://wiki.nesdev.com/w/index.php/PPU_scrolling
   this.incrementVx = function() {
     if((this.v & 0x1f) === 0x1f) {
       this.v &= 0x7fe0;
@@ -431,7 +439,6 @@ function Ppu(nes) {
       this.v++;
     }
   }
-
   this.incrementVy = function() {
     if((this.v & 0x7000) !== 0x7000) {
       this.v += 0x1000;
@@ -652,6 +659,7 @@ function Ppu(nes) {
     }
   }
 
+  // not sure where this palette came from, found it in a old project
   this.nesPal = [
     [ 117, 117, 117 ], [ 39, 27, 143 ], [ 0, 0, 171 ], [ 71, 0, 159 ],[ 143, 0, 119 ], [ 171, 0, 19 ], [ 167, 0, 0 ], [ 127, 11, 0 ],[ 67, 47, 0 ], [ 0, 71, 0 ], [ 0, 81, 0 ], [ 0, 63, 23 ],[ 27, 63, 95 ], [ 0, 0, 0 ], [ 0, 0, 0 ], [ 0, 0, 0 ],
     [ 188, 188, 188 ], [ 0, 115, 239 ], [ 35, 59, 239 ], [ 131, 0, 243 ],[ 191, 0, 191 ], [ 231, 0, 91 ], [ 219, 43, 0 ], [ 203, 79, 15 ],[ 139, 115, 0 ], [ 0, 151, 0 ], [ 0, 171, 0 ], [ 0, 147, 59 ],[ 0, 131, 139 ], [ 0, 0, 0 ], [ 0, 0, 0 ], [ 0, 0, 0 ],
