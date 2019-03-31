@@ -353,39 +353,25 @@ function Ppu(nes) {
         finalColor = this.readPalette(0);
       }
     } else {
-      if(!this.bgRendering) {
-        // sprite rendering has to be on
+      // if bg pixel is 0, render sprite pixel
+      if(bgPixel === 0) {
         if(sprPixel > 0) {
           finalColor = this.readPalette(sprPixel + 0x10);
         } else {
           finalColor = this.readPalette(0);
         }
       } else {
-        if(!this.sprRendering) {
-          finalColor = this.readPalette(bgPixel);
-        } else {
-          // sprite and bg
-          // if bg pixel is 0, render sprite pixel
-          if(bgPixel === 0) {
-            if(sprPixel > 0) {
-              finalColor = this.readPalette(sprPixel + 0x10);
-            } else {
-              finalColor = this.readPalette(0);
-            }
-          } else {
-            // render sprite pixel if not 0 and it has priority
-            if(sprPixel > 0) {
-              // check for sprite zero
-              if(sprNum === 0 && this.spriteZeroIn) {
-                this.spriteZero = true;
-              }
-            }
-            if(sprPixel > 0 && sprPriority === 0) {
-              finalColor = this.readPalette(sprPixel + 0x10);
-            } else {
-              finalColor = this.readPalette(bgPixel);
-            }
+        // render sprite pixel if not 0 and it has priority
+        if(sprPixel > 0) {
+          // check for sprite zero
+          if(sprNum === 0 && this.spriteZeroIn) {
+            this.spriteZero = true;
           }
+        }
+        if(sprPixel > 0 && sprPriority === 0) {
+          finalColor = this.readPalette(sprPixel + 0x10);
+        } else {
+          finalColor = this.readPalette(bgPixel);
         }
       }
     }
@@ -659,12 +645,12 @@ function Ppu(nes) {
     }
   }
 
-  // not sure where this palette came from, found it in a old project
+  // from https://wiki.nesdev.com/w/index.php/PPU_palettes (savtool palette)
   this.nesPal = [
-    [ 117, 117, 117 ], [ 39, 27, 143 ], [ 0, 0, 171 ], [ 71, 0, 159 ],[ 143, 0, 119 ], [ 171, 0, 19 ], [ 167, 0, 0 ], [ 127, 11, 0 ],[ 67, 47, 0 ], [ 0, 71, 0 ], [ 0, 81, 0 ], [ 0, 63, 23 ],[ 27, 63, 95 ], [ 0, 0, 0 ], [ 0, 0, 0 ], [ 0, 0, 0 ],
-    [ 188, 188, 188 ], [ 0, 115, 239 ], [ 35, 59, 239 ], [ 131, 0, 243 ],[ 191, 0, 191 ], [ 231, 0, 91 ], [ 219, 43, 0 ], [ 203, 79, 15 ],[ 139, 115, 0 ], [ 0, 151, 0 ], [ 0, 171, 0 ], [ 0, 147, 59 ],[ 0, 131, 139 ], [ 0, 0, 0 ], [ 0, 0, 0 ], [ 0, 0, 0 ],
-    [ 255, 255, 255 ], [ 63, 191, 255 ], [ 95, 151, 255 ], [ 167, 139, 253 ],[ 247, 123, 255 ], [ 255, 119, 183 ], [ 255, 119, 99 ], [ 255, 155, 59 ],[ 243, 191, 63 ], [ 131, 211, 19 ], [ 79, 223, 75 ], [ 88, 248, 152 ],[ 0, 235, 219 ], [ 60, 60, 60 ], [ 0, 0, 0 ], [ 0, 0, 0 ],
-    [ 255, 255, 255 ], [ 171, 231, 255 ], [ 199, 215, 255 ], [ 215, 203, 255 ],[ 255, 199, 255 ], [ 255, 199, 219 ], [ 255, 191, 179 ], [ 255, 219, 171 ],[ 255, 231, 163 ], [ 227, 255, 163 ], [ 171, 243, 191 ], [ 179, 255, 207 ],[ 159, 255, 243 ], [ 160, 160, 160 ], [ 0, 0, 0 ], [ 0, 0, 0 ]
-  ];
+    [0x65, 0x65, 0x65], [0x00, 0x26, 0x6d], [0x1e, 0x00, 0x84], [0x45, 0x00, 0x81], [0x6a, 0x00, 0x65], [0x7d, 0x00, 0x34], [0x7a, 0x00, 0x00], [0x61, 0x13, 0x00], [0x35, 0x29, 0x00], [0x00, 0x37, 0x00], [0x00, 0x40, 0x00], [0x00, 0x40, 0x0a], [0x00, 0x39, 0x42], [0x00, 0x00, 0x00], [0x00, 0x00, 0x00], [0x00, 0x00, 0x00],
+    [0xae, 0xae, 0xae], [0x00, 0x5c, 0xb9], [0x49, 0x3b, 0xd8], [0x85, 0x11, 0xd3], [0xb6, 0x00, 0xad], [0xcf, 0x02, 0x6e], [0xcb, 0x2a, 0x19], [0xa9, 0x45, 0x00], [0x6f, 0x5e, 0x00], [0x18, 0x73, 0x00], [0x00, 0x7e, 0x00], [0x00, 0x7f, 0x39], [0x00, 0x74, 0x80], [0x00, 0x00, 0x00], [0x00, 0x00, 0x00], [0x00, 0x00, 0x00],
+    [0xfe, 0xfe, 0xff], [0x48, 0xaf, 0xff], [0x91, 0x98, 0xff], [0xd5, 0x7f, 0xff], [0xff, 0x6b, 0xff], [0xff, 0x71, 0xc0], [0xff, 0x82, 0x75], [0xfa, 0x98, 0x28], [0xbe, 0xb0, 0x00], [0x71, 0xc4, 0x00], [0x00, 0xd0, 0x45], [0x00, 0xd1, 0x8a], [0x00, 0xc5, 0xd1], [0x4e, 0x4e, 0x4e], [0x00, 0x00, 0x00], [0x00, 0x00, 0x00],
+    [0xfe, 0xfe, 0xff], [0xb6, 0xde, 0xff], [0xd1, 0xd5, 0xff], [0xee, 0xcc, 0xff], [0xff, 0xc6, 0xff], [0xff, 0xc7, 0xe5], [0xff, 0xcd, 0xc7], [0xfd, 0xd5, 0xaf], [0xe4, 0xdf, 0xa1], [0xc5, 0xe8, 0xa3], [0xac, 0xed, 0xb5], [0x9e, 0xec, 0xd0], [0xa2, 0xe7, 0xec], [0xb6, 0xb6, 0xb6], [0x00, 0x00, 0x00], [0x00, 0x00, 0x00]
+  ]
 
 }
