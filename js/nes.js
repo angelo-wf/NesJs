@@ -7,6 +7,8 @@ function Nes() {
   this.cpu = new Cpu(this);
   // ppu
   this.ppu = new Ppu(this);
+  // apu
+  this.apu = new Apu(this);
   // mapper / rom
   this.mapper;
 
@@ -97,6 +99,24 @@ function Nes() {
     this.ppu.setFrame(data);
   }
 
+  this.getSamples = function(data) {
+    // apu returns 29780 or 29781 samples (0x0 - 0xf) for a frame
+    // we need 735 values (-1 - 1)
+    // get one every 40.5
+    let samples = this.apu.getOutput();
+    let total = 0;
+    let inputPos = 0;
+    for(let i = 0; i < 735; i++) {
+      let total = 0;
+      let avgCount = (i & 1) === 0 ? 40 : 41;
+      for(let j = inputPos; j < inputPos + avgCount; j++) {
+        total += samples[1][j];
+      }
+      data[i] = 1 - ((total / avgCount) / 8);
+      inputPos += avgCount;
+    }
+  }
+
   this.hardReset = function() {
     // initialize ram to zeroes
     for(let i = 0; i < this.ram.length; i++) {
@@ -109,6 +129,7 @@ function Nes() {
   this.reset = function() {
     this.cpu.reset();
     this.ppu.reset();
+    this.apu.reset();
     this.mapper.reset();
     this.cycles = 0;
     this.inDma = false;
@@ -122,7 +143,7 @@ function Nes() {
 
   this.cycle = function() {
     if(this.cycles % 3 === 0) {
-      // do a cpu cycle every 3 ppu cycles
+      // do a cpu and apu cycle every 3 ppu cycles
 
       // handle controller latch
       if(this.controllerLatched) {
@@ -151,6 +172,8 @@ function Nes() {
           this.inDma = false;
         }
       }
+
+      this.apu.cycle();
     }
     this.ppu.cycle();
     this.cycles++;
@@ -175,7 +198,6 @@ function Nes() {
     }
     if(adr < 0x4020) {
       // apu/misc ports
-      // TODO: apu
       if(adr === 0x4014) {
         return 0; // not readable
       }
@@ -193,7 +215,7 @@ function Nes() {
         // TODO: actually implement open bus
         return ret | 0x40;
       }
-      return 0; //not inplemented yet
+      return this.apu.read(adr);
     }
     return this.mapper.read(adr);
   }
@@ -213,7 +235,6 @@ function Nes() {
     }
     if(adr < 0x4020) {
       // apu/misc ports
-      // TODO: apu
       if(adr === 0x4014) {
         this.inDma = true;
         this.dmaBase = value << 8;
@@ -227,7 +248,8 @@ function Nes() {
         }
         return;
       }
-      return; // not inplemented yet
+      this.apu.write(adr, value);
+      return;
     }
     this.mapper.write(adr, value);
   }

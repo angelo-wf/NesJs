@@ -91,11 +91,11 @@ el("rom").onchange = function(e) {
 el("pause").onclick = function(e) {
   if(paused && loaded) {
     requestAnimationFrame(update);
-    //audioHandler.start();
+    audioHandler.start();
     paused = false;
     el("pause").innerText = "Pause";
   } else {
-    //audioHandler.stop();
+    audioHandler.stop();
     paused = true;
     el("pause").innerText = "Continue";
   }
@@ -120,7 +120,7 @@ function loadRom(rom) {
     nes.hardReset();
     if(!loaded && !paused) {
       requestAnimationFrame(update);
-      //audioHandler.start();
+      audioHandler.start();
     }
     loaded = true;
   }
@@ -135,7 +135,8 @@ function update() {
 
 function runFrame() {
   nes.runFrame();
-  audioHandler.nextBuffer([]);
+  nes.getSamples(audioHandler.sampleBuffer);
+  audioHandler.nextBuffer();
   nes.getPixels(imgData.data);
   ctx.putImageData(imgData, 0, 0);
 }

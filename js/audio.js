@@ -3,6 +3,8 @@ function AudioHandler() {
 
   this.hasAudio = true;
   let Ac = window.AudioContext || window.webkitAudioContext;
+  this.sampleBuffer = new Float64Array(735);
+
   if(Ac === undefined) {
     log("Audio disabled: no Web Audio API support");
     this.hasAudio = false;
@@ -48,17 +50,19 @@ function AudioHandler() {
     if(this.inputReadPos > this.inputBufferPos) {
       // we overran the buffer, sync values
       this.inputBufferPos = this.inputReadPos;
+      log("Audio buffer overran");
     }
     if(this.inputReadPos + 2048 < this.inputBufferPos) {
       // we underran the buffer, sync values
       this.inputBufferPos = this.inputReadPos;
+      log("Audio buffer underran");
     }
   }
 
-  this.nextBuffer = function(buffer) {
+  this.nextBuffer = function() {
     if(this.hasAudio) {
       for(let i = 0; i < 735; i++) {
-        let val = (i % 40 < 20) ? -0.5 : 0.5;
+        let val = this.sampleBuffer[i];
         this.inputBuffer[(this.inputBufferPos++) & 0xfff] = val;
       }
     }
