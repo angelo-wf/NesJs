@@ -1,6 +1,6 @@
 
 let nes = new Nes();
-let loopId
+let audioHandler = new AudioHandler();
 let paused = false;
 let loaded = false;
 
@@ -91,9 +91,11 @@ el("rom").onchange = function(e) {
 el("pause").onclick = function(e) {
   if(paused && loaded) {
     requestAnimationFrame(update);
+    //audioHandler.start();
     paused = false;
     el("pause").innerText = "Pause";
   } else {
+    //audioHandler.stop();
     paused = true;
     el("pause").innerText = "Continue";
   }
@@ -118,6 +120,7 @@ function loadRom(rom) {
     nes.hardReset();
     if(!loaded && !paused) {
       requestAnimationFrame(update);
+      //audioHandler.start();
     }
     loaded = true;
   }
@@ -132,7 +135,9 @@ function update() {
 
 function runFrame() {
   nes.runFrame();
-  drawPixels();
+  audioHandler.nextBuffer([]);
+  nes.getPixels(imgData.data);
+  ctx.putImageData(imgData, 0, 0);
 }
 
 function visualizeNametable(tbl) {
@@ -155,11 +160,6 @@ function visualizeSrites(spr) {
     let x = spr[i * 4 + 3];
     ctx.strokeRect(x + 0.5, y + 0.5, 7, 7);
   }
-}
-
-function drawPixels() {
-  nes.getPixels(imgData.data);
-  ctx.putImageData(imgData, 0, 0);
 }
 
 function log(text) {

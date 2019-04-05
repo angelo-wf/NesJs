@@ -166,6 +166,8 @@ function Ppu(nes) {
         }
         if(this.bgRendering || this.sprRendering) {
           this.evenFrame = !this.evenFrame; // flip frame state
+        } else {
+          this.evenFrame = true; // not in rendering, all frames are even
         }
       }
     } else if(this.line === 261) {
@@ -245,7 +247,7 @@ function Ppu(nes) {
           if(this.spriteHeight === 16) {
             base = (tileNum & 0x1) * 0x1000;
             tileNum = (tileNum & 0xfe);
-            tileNum += (sprRow > 7) ? 1 : 0;
+            tileNum += (sprRow & 0x8) >> 3;
             sprRow &= 0x7;
           }
           this.spriteTiles[this.spriteCount] = this.readInternal(
@@ -314,8 +316,8 @@ function Ppu(nes) {
             xCol = 7 - xCol;
           }
           let shift = 7 - xCol;
-          let pixel = (this.spriteTiles[j] & (1 << shift)) >> shift;
-          pixel |= ((this.spriteTiles[j + 8] & (1 << shift)) >> shift) << 1;
+          let pixel = (this.spriteTiles[j] >> shift) & 1;
+          pixel |= ((this.spriteTiles[j + 8] >> shift) & 1) << 1;
           if(pixel > 0) {
             // set the pixel, priority, and number
             sprPixel = pixel | ((this.secondaryOam[j * 4 + 2] & 0x3) << 2);
@@ -331,8 +333,8 @@ function Ppu(nes) {
       // if bg rendering is on, and either not the left 8 pixels
       // or bg rendering in left 8 columns is on
       let shiftAmount = 15 - i - this.x;
-      bgPixel = (this.tl & (1 << shiftAmount)) >> shiftAmount;
-      bgPixel |= ((this.th & (1 << shiftAmount)) >> shiftAmount) << 1;
+      bgPixel = (this.tl >> shiftAmount) & 1;
+      bgPixel |= ((this.th >> shiftAmount) & 1) << 1;
       let atrOff;
       if(this.x + i > 7) {
         // right tile
@@ -364,7 +366,7 @@ function Ppu(nes) {
         // render sprite pixel if not 0 and it has priority
         if(sprPixel > 0) {
           // check for sprite zero
-          if(sprNum === 0 && this.spriteZeroIn) {
+          if(sprNum === 0 && this.spriteZeroIn && this.dot !== 255) {
             this.spriteZero = true;
           }
         }
@@ -531,8 +533,17 @@ function Ppu(nes) {
       case 7: {
         // PPUDATA
         let adr = this.v & 0x3fff;
-        this.v += this.vramIncrement;
-        this.v &= 0x7fff;
+        if(
+          (this.bgRendering || this.sprRendering) &&
+          (this.line < 240 || this.line === 261)
+        ) {
+          // while rendering, vram is incremented strangely
+          this.incrementVy();
+          this.incrementVx();
+        } else {
+          this.v += this.vramIncrement;
+          this.v &= 0x7fff;
+        }
         let temp = this.readBuffer;
         if(adr >= 0x3f00) {
           // read palette in temp
@@ -571,8 +582,14 @@ function Ppu(nes) {
         } else {
           this.spriteHeight = 8;
         }
+        let oldNmi = this.generateNmi;
         this.slave = (value & 0x40) > 0;
         this.generateNmi = (value & 0x80) > 0;
+
+        if(this.generateNmi && !oldNmi && this.inVblank) {
+          // immediate nmi if enabled during vblank
+          this.nes.cpu.nmiWanted = true;
+        }
         return;
       }
       case 1: {
@@ -632,8 +649,17 @@ function Ppu(nes) {
       case 7: {
         // PPUDATA
         let adr = this.v & 0x3fff;
-        this.v += this.vramIncrement;
-        this.v &= 0x7fff;
+        if(
+          (this.bgRendering || this.sprRendering) &&
+          (this.line < 240 || this.line === 261)
+        ) {
+          // while rendering, vram is incremented strangely
+          this.incrementVy();
+          this.incrementVx();
+        } else {
+          this.v += this.vramIncrement;
+          this.v &= 0x7fff;
+        }
         if(adr >= 0x3f00) {
           // write palette
           this.writePalette(adr, value);

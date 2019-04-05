@@ -183,13 +183,15 @@ function Nes() {
         let ret = this.latchedControl1State & 1;
         this.latchedControl1State >>= 1;
         this.latchedControl1State |= 0x80; // set bit 7
-        return ret;
+        // TODO: actually implement open bus
+        return ret | 0x40;
       }
       if(adr === 0x4017) {
         let ret = this.latchedControl2State & 1;
         this.latchedControl2State >>= 1;
         this.latchedControl2State |= 0x80; // set bit 7
-        return ret;
+        // TODO: actually implement open bus
+        return ret | 0x40;
       }
       return 0; //not inplemented yet
     }

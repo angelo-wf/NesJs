@@ -62,15 +62,6 @@ function Cpu(mem) {
     this.cyclesLeft = 7;
   }
 
-  this.getStateRep = function() {
-    let str = "A:" + getByteRep(this.r[A]) + " ";
-    str += "X:" + getByteRep(this.r[X]) + " ";
-    str += "Y:" + getByteRep(this.r[Y]) + " ";
-    str += "P:" + getByteRep(this.getP(false)) + " ";
-    str += "SP:" + getByteRep(this.r[SP]) + " ";
-    return str;
-  }
-
   // instruction maps
 
   this.addressingModes = [
@@ -223,16 +214,8 @@ function Cpu(mem) {
   // set Z (zero flag) and N (overflow flag) according to the value
   this.setZandN = function(value) {
     value &= 0xff;
-    if(value === 0) {
-      this.z = true;
-    } else {
-      this.z = false;
-    }
-    if(value > 0x7f) {
-      this.n = true;
-    } else {
-      this.n = false;
-    }
+    this.z = value === 0;
+    this.n = value > 0x7f;
   }
 
   // get a singed value (-128 - 127) out of a unsigned one (0 - 255)
@@ -249,7 +232,7 @@ function Cpu(mem) {
   this.getAdr = function(mode) {
     switch(mode) {
       case IMP: {
-        // implied, wont use a address
+        // implied, wont use an address
         return [0, false];
       }
       case IMM: {
@@ -295,7 +278,7 @@ function Cpu(mem) {
         return [adr, false];
       }
       case ABX: {
-        // abcolute, indexed by x
+        // absolute, indexed by x
         let adr = this.mem.read(this.br[PC]++);
         adr |= (this.mem.read(this.br[PC]++) << 8);
         let flag = false;
@@ -305,7 +288,7 @@ function Cpu(mem) {
         return [(adr + this.r[X]) & 0xffff, flag];
       }
       case ABY: {
-        // abcolute, indexed by y
+        // absolute, indexed by y
         let adr = this.mem.read(this.br[PC]++);
         adr |= (this.mem.read(this.br[PC]++) << 8);
         let flag = false;
@@ -315,7 +298,7 @@ function Cpu(mem) {
         return [(adr + this.r[Y]) & 0xffff, flag];
       }
       case IND: {
-        // indexed, doesn't loop pages properly
+        // indirect, doesn't loop pages properly
         let adrl = this.mem.read(this.br[PC]++);
         let adrh = this.mem.read(this.br[PC]++);
         let radr = this.mem.read(adrl | (adrh << 8));
@@ -368,19 +351,11 @@ function Cpu(mem) {
     // adds the value + C to A, set C, V, Z and N
     let value = mem.read(adr);
     let result = this.r[A] + value + (this.c ? 1 : 0);
-    if(result > 0xff) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
-    if(
+    this.c = result > 0xff;
+    this.v = (
       (this.r[A] & 0x80) === (value & 0x80) &&
       (value & 0x80) !== (result & 0x80)
-    ) {
-      this.v = true;
-    } else {
-      this.v = false;
-    }
+    );
     this.r[A] = result;
     this.setZandN(this.r[A]);
     return false;
@@ -390,19 +365,11 @@ function Cpu(mem) {
     // subtracts the value + !C from A, set C, V, Z and N
     let value = mem.read(adr) ^ 0xff;
     let result = this.r[A] + value + (this.c ? 1 : 0);
-    if(result > 0xff) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
-    if(
+    this.c = result > 0xff;
+    this.v = (
       (this.r[A] & 0x80) === (value & 0x80) &&
       (value & 0x80) !== (result & 0x80)
-    ) {
-      this.v = true;
-    } else {
-      this.v = false;
-    }
+    );
     this.r[A] = result;
     this.setZandN(this.r[A]);
     return false;
@@ -412,11 +379,7 @@ function Cpu(mem) {
     // sets C, Z and N according to what A - value would do
     let value = mem.read(adr) ^ 0xff;
     let result = this.r[A] + value + 1;
-    if(result > 0xff) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = result > 0xff;
     this.setZandN(result & 0xff);
     return false;
   }
@@ -425,11 +388,7 @@ function Cpu(mem) {
     // sets C, Z and N according to what X - value would do
     let value = mem.read(adr) ^ 0xff;
     let result = this.r[X] + value + 1;
-    if(result > 0xff) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = result > 0xff;
     this.setZandN(result & 0xff);
     return false;
   }
@@ -438,17 +397,13 @@ function Cpu(mem) {
     // sets C, Z and N according to what Y - value would do
     let value = mem.read(adr) ^ 0xff;
     let result = this.r[Y] + value + 1;
-    if(result > 0xff) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = result > 0xff;
     this.setZandN(result & 0xff);
     return false;
   }
 
   this.dec = function(adr) {
-    // decrements the address, set Z and N
+    // decrements a memory location, set Z and N
     let result = (this.mem.read(adr) - 1) & 0xff;
     this.setZandN(result);
     this.mem.write(adr, result);
@@ -470,7 +425,7 @@ function Cpu(mem) {
   }
 
   this.inc = function(adr) {
-    // increments the address, set Z and N
+    // increments a memory location, set Z and N
     let result = (this.mem.read(adr) + 1) & 0xff;
     this.setZandN(result);
     this.mem.write(adr, result);
@@ -491,14 +446,10 @@ function Cpu(mem) {
     return false;
   }
 
-  this.sla = function(adr) {
+  this.asla = function(adr) {
     // shifts A left 1, set C, Z and N
     let result = this.r[A] << 1;
-    if(result > 0xff) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = result > 0xff;
     this.setZandN(result);
     this.r[A] = result;
     return false;
@@ -507,24 +458,16 @@ function Cpu(mem) {
   this.asl = function(adr) {
     // shifts a memory location left 1, set C, Z and N
     let result = this.mem.read(adr) << 1;
-    if(result > 0xff) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = result > 0xff;
     this.setZandN(result);
     this.mem.write(adr, result);
     return false;
   }
 
-  this.rla = function(adr) {
+  this.rola = function(adr) {
     // rolls A left 1, rolls C in, set C, Z and N
     let result = (this.r[A] << 1) | (this.c ? 1 : 0);
-    if(result > 0xff) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = result > 0xff;
     this.setZandN(result);
     this.r[A] = result;
     return false;
@@ -533,25 +476,17 @@ function Cpu(mem) {
   this.rol = function(adr) {
     // rolls a memory location left 1, rolls C in, set C, Z and N
     let result = (this.mem.read(adr) << 1) | (this.c ? 1 : 0);
-    if(result > 0xff) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = result > 0xff;
     this.setZandN(result);
     this.mem.write(adr, result);
     return false;
   }
 
-  this.sra = function(adr) {
+  this.lsra = function(adr) {
     // shifts A right 1, set C, Z and N
     let carry = this.r[A] & 0x1;
     let result = this.r[A] >> 1;
-    if(carry) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = carry > 0;
     this.setZandN(result);
     this.r[A] = result;
     return false;
@@ -562,25 +497,17 @@ function Cpu(mem) {
     let value = this.mem.read(adr);
     let carry = value & 0x1;
     let result = value >> 1;
-    if(carry) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = carry > 0;
     this.setZandN(result);
     this.mem.write(adr, result);
     return false;
   }
 
-  this.rra = function(adr) {
+  this.rora = function(adr) {
     // rolls A right 1, rolls C in, set C, Z and N
     let carry = this.r[A] & 0x1;
     let result = (this.r[A] >> 1) | ((this.c ? 1 : 0) << 7);
-    if(carry) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = carry > 0;
     this.setZandN(result);
     this.r[A] = result;
     return false;
@@ -591,11 +518,7 @@ function Cpu(mem) {
     let value = this.mem.read(adr);
     let carry = value & 0x1;
     let result = (value >> 1) | ((this.c ? 1 : 0) << 7);
-    if(carry) {
-      this.c = true;
-    } else {
-      this.c = false;
-    }
+    this.c = carry > 0;
     this.setZandN(result);
     this.mem.write(adr, result);
     return false;
@@ -824,22 +747,10 @@ function Cpu(mem) {
   this.bit = function(adr) {
     // bit test A with value, set N to b7, V to b6 and Z to result
     let value = this.mem.read(adr);
-    if((value & 0x80) > 0) {
-      this.n = true;
-    } else {
-      this.n = false;
-    }
-    if((value & 0x40) > 0) {
-      this.v = true;
-    } else {
-      this.v = false;
-    }
+    this.n = (value & 0x80) > 0;
+    this.v = (value & 0x40) > 0;
     let res = this.r[A] & value;
-    if(res === 0) {
-      this.z = true;
-    } else {
-      this.z = false;
-    }
+    this.z = res === 0;
     return false;
   }
 
@@ -912,15 +823,16 @@ function Cpu(mem) {
     return false;
   }
 
+  // function table
   this.functions = [
     //x0      x1        x2        x3        x4        x5        x6        x7        x8        x9        xa        xb        xc        xd        xe        xf
-    this.brk, this.ora, this.uni, this.uni, this.uni, this.ora, this.asl, this.uni, this.php, this.ora, this.sla, this.uni, this.uni, this.ora, this.asl, this.uni, //0x
+    this.brk, this.ora, this.uni, this.uni, this.uni, this.ora, this.asl, this.uni, this.php, this.ora, this.asla,this.uni, this.uni, this.ora, this.asl, this.uni, //0x
     this.bpl, this.ora, this.uni, this.uni, this.uni, this.ora, this.asl, this.uni, this.clc, this.ora, this.uni, this.uni, this.uni, this.ora, this.asl, this.uni, //1x
-    this.jsr, this.and, this.uni, this.uni, this.bit, this.and, this.rol, this.uni, this.plp, this.and, this.rla, this.uni, this.bit, this.and, this.rol, this.uni, //2x
+    this.jsr, this.and, this.uni, this.uni, this.bit, this.and, this.rol, this.uni, this.plp, this.and, this.rola,this.uni, this.bit, this.and, this.rol, this.uni, //2x
     this.bmi, this.and, this.uni, this.uni, this.uni, this.and, this.rol, this.uni, this.sec, this.and, this.uni, this.uni, this.uni, this.and, this.rol, this.uni, //3x
-    this.rti, this.eor, this.uni, this.uni, this.uni, this.eor, this.lsr, this.uni, this.pha, this.eor, this.sra, this.uni, this.jmp, this.eor, this.lsr, this.uni, //4x
+    this.rti, this.eor, this.uni, this.uni, this.uni, this.eor, this.lsr, this.uni, this.pha, this.eor, this.lsra,this.uni, this.jmp, this.eor, this.lsr, this.uni, //4x
     this.bvc, this.eor, this.uni, this.uni, this.uni, this.eor, this.lsr, this.uni, this.cli, this.eor, this.uni, this.uni, this.uni, this.eor, this.lsr, this.uni, //5x
-    this.rts, this.adc, this.uni, this.uni, this.uni, this.adc, this.ror, this.uni, this.pla, this.adc, this.rra, this.uni, this.jmp, this.adc, this.ror, this.uni, //6x
+    this.rts, this.adc, this.uni, this.uni, this.uni, this.adc, this.ror, this.uni, this.pla, this.adc, this.rora,this.uni, this.jmp, this.adc, this.ror, this.uni, //6x
     this.bvs, this.adc, this.uni, this.uni, this.uni, this.adc, this.ror, this.uni, this.sei, this.adc, this.uni, this.uni, this.uni, this.adc, this.ror, this.uni, //7x
     this.uni, this.sta, this.uni, this.uni, this.sty, this.sta, this.stx, this.uni, this.dey, this.uni, this.txa, this.uni, this.sty, this.sta, this.stx, this.uni, //8x
     this.bcc, this.sta, this.uni, this.uni, this.sty, this.sta, this.stx, this.uni, this.tya, this.sta, this.txs, this.uni, this.uni, this.sta, this.uni, this.uni, //9x
