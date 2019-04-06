@@ -144,7 +144,6 @@ function Cpu(mem) {
           this.nmiWanted = false;
           instr = 0x100; // NMI
         } else {
-          this.irqWanted = false;
           instr = 0x101; // IRQ
         }
         mode = IMP;

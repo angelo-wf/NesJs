@@ -127,7 +127,7 @@ function Mmc3(nes, rom, header) {
       this.irqCounter &= 0xff;
     }
     if(this.irqCounter === 0 && this.irqEnabled) {
-      this.nes.cpu.irqWanted = true;
+      this.nes.mapperIrqWanted = true;
     }
   }
 
@@ -178,6 +178,7 @@ function Mmc3(nes, rom, header) {
       }
       case 0x6000: {
         this.irqEnabled = false;
+        this.nes.mapperIrqWanted = false;
         break;
       }
       case 0x6001: {

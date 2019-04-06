@@ -28,6 +28,11 @@ function Nes() {
   this.latchedControl2State = 0;
   this.controllerLatched = false;
 
+  // irq sources
+  this.mapperIrqWanted = false;
+  this.frameIrqWanted = false;
+  this.dmcIrqWanted = false;
+
   this.loadRom = function(rom) {
     if(rom.length < 0x10) {
       log("Invalid rom loaded");
@@ -100,7 +105,7 @@ function Nes() {
   }
 
   this.getSamples = function(data) {
-    // apu returns 29780 or 29781 samples (0x0 - 0xf) for a frame
+    // apu returns 29780 or 29781 samples (0 - 1) for a frame
     // we need 735 values (-1 - 1)
     // get one every 40.5
     let samples = this.apu.getOutput();
@@ -112,7 +117,7 @@ function Nes() {
       for(let j = inputPos; j < inputPos + avgCount; j++) {
         total += samples[1][j];
       }
-      data[i] = 1 - ((total / avgCount) / 8);
+      data[i] = 1 - (total / avgCount) * 2;
       inputPos += avgCount;
     }
   }
@@ -149,6 +154,13 @@ function Nes() {
       if(this.controllerLatched) {
         this.latchedControl1State = this.currentControl1State;
         this.latchedControl2State = this.currentControl2State;
+      }
+
+      // handle irq
+      if(this.mapperIrqWanted || this.frameIrqWanted || this.dmcIrqWanted) {
+        this.cpu.irqWanted = true;
+      } else {
+        this.cpu.irqWanted = false;
       }
 
       if(!this.inDma) {
