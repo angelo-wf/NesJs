@@ -2,7 +2,6 @@
 function Apu(nes) {
 
   // TODO: noise, dmc, sweep units, volume enevlope
-  // TODO: some song's pulse channels (eg. SMB2) sound wierd between notes
 
   // memory handler
   this.nes = nes;
@@ -137,9 +136,9 @@ function Apu(nes) {
       this.frameCounter === 37282
     ) {
       this.frameCounter = 0;
-    } else {
-      this.frameCounter++;
     }
+    this.frameCounter++;
+    
     this.handleFrameCounter();
 
     this.cycleTriangle();
@@ -159,12 +158,10 @@ function Apu(nes) {
   }
 
   this.cyclePulse1 = function() {
-    if(this.p1TimerValue === 0) {
-      this.p1TimerValue = this.p1Timer;
-    } else {
+    if(this.p1TimerValue !== 0) {
       this.p1TimerValue--;
-    }
-    if(this.p1TimerValue === 0) {
+    } else {
+      this.p1TimerValue = this.p1Timer;
       this.p1DutyOutput = this.dutyCycles[this.p1Duty][this.p1DutyIndex++];
       this.p1DutyIndex &= 0x7;
     }
@@ -176,12 +173,10 @@ function Apu(nes) {
   }
 
   this.cyclePulse2 = function() {
-    if(this.p2TimerValue === 0) {
-      this.p2TimerValue = this.p2Timer;
-    } else {
+    if(this.p2TimerValue !== 0) {
       this.p2TimerValue--;
-    }
-    if(this.p2TimerValue === 0) {
+    } else {
+      this.p2TimerValue = this.p2Timer;
       this.p2DutyOutput = this.dutyCycles[this.p2Duty][this.p2DutyIndex++];
       this.p2DutyIndex &= 0x7;
     }
@@ -193,25 +188,22 @@ function Apu(nes) {
   }
 
   this.cycleTriangle = function() {
-    if(this.triTimerValue === 0) {
-      this.triTimerValue = this.triTimer;
-    } else {
+    if(this.triTimerValue !== 0) {
       this.triTimerValue--;
-    }
-    if(
-      this.triTimerValue === 0 &&
-      this.triCounter !== 0 && this.triLinearCounter !== 0
-    ) {
-      this.triOutput = this.triangleSteps[this.triStepIndex++];
-      if(this.triTimer < 2) {
-        // ultrasonic
-        this.triOutput = 7.5;
+    } else {
+      this.triTimerValue = this.triTimer;
+      if(this.triCounter !== 0 && this.triLinearCounter !== 0) {
+        this.triOutput = this.triangleSteps[this.triStepIndex++];
+        if(this.triTimer < 2) {
+          // ultrasonic
+          this.triOutput = 7.5;
+        }
+        this.triStepIndex &= 0x1f;
       }
-      this.triStepIndex &= 0x1f;
     }
   }
 
-  this.clockEnvelopes = function() {
+  this.clockQuarter = function() {
     // handle triangle linear counter
     if(this.triReloadLinear) {
       this.triLinearCounter = this.triLinearReload;
@@ -223,7 +215,7 @@ function Apu(nes) {
     }
   }
 
-  this.clockSweeps = function() {
+  this.clockHalf = function() {
     // decrement length counters
     if(!this.p1CounterHalt && this.p1Counter !== 0) {
       this.p1Counter--;
@@ -237,6 +229,7 @@ function Apu(nes) {
   }
 
   this.mix = function() {
+    // from https://wiki.nesdev.com/w/index.php/APU_Mixer
     let tnd = 0.00851 * this.triOutput + 0.00494 * 0 + 0.00335 * 0;
     let pulse = 0.00752 * (this.p1Output + this.p2Output);
     return tnd + pulse;
@@ -244,21 +237,21 @@ function Apu(nes) {
 
   this.handleFrameCounter = function() {
     if(this.frameCounter === 7457) {
-      this.clockEnvelopes();
+      this.clockQuarter();
     } else if(this.frameCounter === 14913) {
-      this.clockEnvelopes();
-      this.clockSweeps();
+      this.clockQuarter();
+      this.clockHalf();
     } else if(this.frameCounter === 22371) {
-      this.clockEnvelopes();
+      this.clockQuarter();
     } else if(this.frameCounter === 29829 && !this.step5Mode) {
-      this.clockEnvelopes();
-      this.clockSweeps();
+      this.clockQuarter();
+      this.clockHalf();
       if(!this.interruptInhibit) {
         this.nes.frameIrqWanted = true;
       }
     } else if(this.frameCounter === 37281) {
-      this.clockEnvelopes();
-      this.clockSweeps();
+      this.clockQuarter();
+      this.clockHalf();
     }
   }
 
@@ -330,7 +323,8 @@ function Apu(nes) {
 
         // TODO: is this a mistake in the nesdev wiki?
         // http://forums.nesdev.com/viewtopic.php?f=3&t=13767#p163155
-        // doesn't do this, neither does Mesen, and doing it breaks SMB2
+        // doesn't do this, neither does Mesen,
+        // and doing it breaks SMB2's triangle between notes
         // this.triReloadLinear = true;
         break;
       }
@@ -373,8 +367,8 @@ function Apu(nes) {
         }
         this.frameCounter = 0;
         if(this.step5Mode) {
-          this.clockEnvelopes();
-          this.clockSweeps();
+          this.clockQuarter();
+          this.clockHalf();
         }
         break;
       }
