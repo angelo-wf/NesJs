@@ -141,28 +141,6 @@ function runFrame() {
   ctx.putImageData(imgData, 0, 0);
 }
 
-function visualizeNametable(tbl) {
-  for(let i = 0; i < tbl.length; i++) {
-    let x = i % 32;
-    let y = i >> 5;
-    let r = (tbl[i] >> 5) << 5;
-    let g = ((tbl[i] & 0x1c) >> 2) << 5;
-    let b = (tbl[i] & 0x3) << 6;
-    let str = "rgba(" + r + "," + g + "," + b + ",1)";
-    ctx2.fillStyle = str;
-    ctx2.fillRect(x * 8, y * 8, 8, 8);
-  }
-}
-
-function visualizeSrites(spr) {
-  ctx.strokeStyle = "#ff0000";
-  for(let i = 0; i < 64; i++) {
-    let y = spr[i * 4];
-    let x = spr[i * 4 + 3];
-    ctx.strokeRect(x + 0.5, y + 0.5, 7, 7);
-  }
-}
-
 function log(text) {
   el("log").innerHTML += text + "<br>";
   el("log").scrollTop = el("log").scrollHeight;

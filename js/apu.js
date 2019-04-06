@@ -2,6 +2,7 @@
 function Apu(nes) {
 
   // TODO: noise, dmc, sweep units, volume enevlope
+  // TODO: some song's pulse channels (eg. SMB2) sound wierd between notes
 
   // memory handler
   this.nes = nes;
@@ -330,7 +331,7 @@ function Apu(nes) {
         // TODO: is this a mistake in the nesdev wiki?
         // http://forums.nesdev.com/viewtopic.php?f=3&t=13767#p163155
         // doesn't do this, neither does Mesen, and doing it breaks SMB2
-        //this.triReloadLinear = true;
+        // this.triReloadLinear = true;
         break;
       }
       case 0x400a: {
@@ -365,10 +366,9 @@ function Apu(nes) {
         break;
       }
       case 0x4017: {
-        let oldInhibit = this.interruptInhibit;
         this.step5Mode = (value & 0x80) > 0;
         this.interruptInhibit = (value & 0x40) > 0;
-        if(!oldInhibit && this.interruptInhibit) {
+        if(this.interruptInhibit) {
           this.nes.frameIrqWanted = false;
         }
         this.frameCounter = 0;

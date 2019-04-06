@@ -4,7 +4,7 @@ Yet another NES emulator, in javascript.
 
 In development.
 
-The CPU emulation seems to be mostly functional, although it is not cycle-accurate and none of the undocumented opcodes are implemented. The PPU emulation also seems to be mostly functional, but is also not cycle-accurate. There is some rudimentary APU emulation (only the 2 pulse channels, and no sweeps, envelopes or length counters).
+The CPU emulation seems to be mostly functional, although it is not cycle-accurate and none of the undocumented opcodes are implemented. The PPU emulation also seems to be mostly functional, but is also not cycle-accurate. There is some rudimentary APU emulation (only the pulse and triangle channels, and no sweeps or envelopes).
 
 Supports mapper 0 (NROM), 1 (MMC1), 2 (UxROM), 3 (CNROM), 4 (MMC3) and 7 (AxROM). The MMC3's IRQ emulation is not really accurate though.
 

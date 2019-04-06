@@ -49,7 +49,7 @@ function loop1k() {
     if(cpu.cyclesLeft <= 0) {
       let lstr = getWordRep(cpu.br[PC]) +
         "                                            " +
-        cpu.getStateRep() + "            CYC:" + cycles;
+        getCpuStateRep(cpu) + "            CYC:" + cycles;
       //log(str);
       if(!checkLogStr(lines[line + 1], lstr)) {
         str += "FAULT DETECTED AT THIS LINE: <br>";
@@ -63,7 +63,7 @@ function loop1k() {
     try {
       cpu.cycle();
     } catch(e) {
-      console.log(getWordRep(cpu.br[PC]) + "," + cpu.getStateRep());
+      console.log(getWordRep(cpu.br[PC]) + "," + getCpuStateRep(cpu));
       console.log(e);
       clearInterval(intervalId);
       break;
@@ -85,6 +85,15 @@ function checkLogStr(fullLine, partLine) {
     return false;
   }
   return true;
+}
+
+function getCpuStateRep(cpu) {
+  let str = "A:" + getByteRep(cpu.r[A]) + " ";
+  str += "X:" + getByteRep(cpu.r[X]) + " ";
+  str += "Y:" + getByteRep(cpu.r[Y]) + " ";
+  str += "P:" + getByteRep(cpu.getP(false)) + " ";
+  str += "SP:" + getByteRep(cpu.r[SP]) + " ";
+  return str;
 }
 
 function MemHandler(rom) {
