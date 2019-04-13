@@ -25,30 +25,22 @@ function Cpu(mem) {
   this.r = new Uint8Array(4);
   this.br = new Uint16Array(1);
 
-  // flags
-  this.n = false;
-  this.v = false;
-  this.d = false;
-  this.i = false;
-  this.z = false;
-  this.c = false;
-
   // memory handler
   this.mem = mem;
-
-  // interrupt wanted
-  this.irqWanted = false;
-  this.nmiWanted = false;
-
-  // cycles left
-  this.cyclesLeft = 0;
 
   this.reset = function() {
     this.r[A] = 0;
     this.r[X] = 0;
     this.r[Y] = 0;
     this.r[SP] = 0xfd;
-    this.br[PC] = this.mem.read(0xfffc) | (this.mem.read(0xfffd) << 8);
+    if(this.mem.read) {
+      this.br[PC] = this.mem.read(0xfffc) | (this.mem.read(0xfffd) << 8);
+    } else {
+      // if the read function in the mem-handler has not been defined yet
+      this.br[PC] = 0;
+    }
+
+    // flags
     this.n = false;
     this.v = false;
     this.d = false;
@@ -56,11 +48,14 @@ function Cpu(mem) {
     this.z = false;
     this.c = false;
 
+    // interrupt wanted
     this.irqWanted = false;
     this.nmiWanted = false;
 
+    // cycles left
     this.cyclesLeft = 7;
   }
+  this.reset();
 
   // instruction maps
 

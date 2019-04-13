@@ -12,26 +12,39 @@ function Nes() {
   // mapper / rom
   this.mapper;
 
-  // cycle timer, to sync cpu/ppu
-  this.cycles = 0;
+  this.reset = function(hard) {
+    if(hard) {
+      for(let i = 0; i < this.ram.length; i++) {
+        this.ram[i] = 0;
+      }
+    }
+    this.cpu.reset();
+    this.ppu.reset();
+    this.apu.reset();
+    if(this.mapper) {
+      this.mapper.reset(hard);
+    }
 
-  // oam dma
-  this.inDma = false;
-  this.dmaTimer = 0;
-  this.dmaBase = 0;
-  this.dmaValue = 0;
+    // cycle timer, to sync cpu/ppu
+    this.cycles = 0;
 
-  // controller
-  this.currentControl1State = 0;
-  this.latchedControl1State = 0;
-  this.currentControl2State = 0;
-  this.latchedControl2State = 0;
-  this.controllerLatched = false;
+    // oam dma
+    this.inDma = false;
+    this.dmaTimer = 0;
+    this.dmaBase = 0;
+    this.dmaValue = 0;
 
-  // irq sources
-  this.mapperIrqWanted = false;
-  this.frameIrqWanted = false;
-  this.dmcIrqWanted = false;
+    // controllers
+    this.latchedControl1State = 0;
+    this.latchedControl2State = 0;
+    this.controllerLatched = false;
+
+    // irq sources
+    this.mapperIrqWanted = false;
+    this.frameIrqWanted = false;
+    this.dmcIrqWanted = false;
+  }
+  this.reset(true);
 
   this.loadRom = function(rom) {
     if(rom.length < 0x10) {
@@ -74,7 +87,7 @@ function Nes() {
         }
         default: {
           log("Unsupported mapper: " + header.mapper);
-          return;
+          return false;
         }
       }
     } catch(e) {
@@ -120,30 +133,6 @@ function Nes() {
       data[i] = 1 - (total / avgCount) * 2;
       inputPos += avgCount;
     }
-  }
-
-  this.hardReset = function() {
-    // initialize ram to zeroes
-    for(let i = 0; i < this.ram.length; i++) {
-      this.ram[i] = 0;
-    }
-    // reset everything else
-    this.reset();
-  }
-
-  this.reset = function() {
-    this.cpu.reset();
-    this.ppu.reset();
-    this.apu.reset();
-    this.mapper.reset();
-    this.cycles = 0;
-    this.inDma = false;
-    this.dmaTimer = 0;
-    this.dmaBase = 0;
-    this.dmaValue = 0;
-    this.latchedControl1State = 0;
-    this.latchedControl2State = 0;
-    this.controllerLatched = false;
   }
 
   this.cycle = function() {

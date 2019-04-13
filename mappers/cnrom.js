@@ -18,15 +18,17 @@ function Cnrom(nes, rom, header) {
 
   this.chrRam = new Uint8Array(0x2000);
 
-  this.chrBank = 0;
-
-  this.reset = function() {
-    // clear chr ram
-    for(let i = 0; i < this.chrRam.length; i++) {
-      this.chrRam[i] = 0;
+  this.reset = function(hard) {
+    if(hard) {
+      // clear chr ram
+      for(let i = 0; i < this.chrRam.length; i++) {
+        this.chrRam[i] = 0;
+      }
     }
+
     this.chrBank = 0;
   }
+  this.reset(true);
 
   this.getChrAdr = function(adr) {
     let bankCount = this.chrBanks;

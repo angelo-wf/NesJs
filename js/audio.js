@@ -35,8 +35,10 @@ function AudioHandler() {
 
   this.stop = function() {
     if(this.hasAudio) {
-      this.scriptNode.disconnect();
-      this.scriptNode = undefined;
+      if(this.scriptNode) {
+        this.scriptNode.disconnect();
+        this.scriptNode = undefined;
+      }
       this.inputBufferPos = 0;
       this.inputReadPos = 0;
     }

@@ -18,15 +18,17 @@ function Uxrom(nes, rom, header) {
 
   this.chrRam = new Uint8Array(0x2000);
 
-  this.prgBank = 0;
-
-  this.reset = function() {
-    // clear chr ram
-    for(let i = 0; i < this.chrRam.length; i++) {
-      this.chrRam[i] = 0;
+  this.reset = function(hard) {
+    if(hard) {
+      // clear chr ram
+      for(let i = 0; i < this.chrRam.length; i++) {
+        this.chrRam[i] = 0;
+      }
     }
+
     this.prgBank = 0;
   }
+  this.reset(true);
 
   this.getRomAdr = function(adr) {
     let bank = this.prgBank & (this.banks - 1);

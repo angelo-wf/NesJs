@@ -13,111 +13,78 @@ function Ppu(nes) {
   // oam memory
   this.oamRam = new Uint8Array(0x100);
 
-  // internal registers
-
-  // scrolling / vram address
-  this.t = 0; // temporary vram address
-  this.v = 0; // vram address
-  this.w = 0; // write flag
-  this.x = 0; // fine x scroll
-
-  // dot position
-  this.line = 0;
-  this.dot = 0;
-  this.evenFrame = true;
-
-  // rest
-  this.oamAddress = 0; // oam address
-  this.readBuffer = 0; // 2007 buffer;
-
-  // for PPUSTAUS
-  this.spriteZero = false;
-  this.spriteOverflow = false;
-  this.inVblank = false;
-
-  // for PPUCTRL
-  this.vramIncrement = 1;
-  this.spritePatternBase = 0;
-  this.bgPatternBase = 0;
-  this.spriteHeight = 8;
-  this.slave = false;
-  this.generateNmi = false;
-
-  // for PPUMASK
-  this.greyScale = false;
-  this.bgInLeft = false;
-  this.sprInLeft = false;
-  this.bgRendering = false;
-  this.sprRendering = false;
-  this.emphasis = 0;
-
-  // internal operation
-  this.atl = 0;
-  this.atr = 0;
-  this.tl = 0;
-  this.th = 0;
+  // sprite buffers
   this.secondaryOam = new Uint8Array(0x20);
-  this.spriteZeroIn = false;
   this.spriteTiles = new Uint8Array(0x10);
-  this.spriteCount = 0;
 
-  this.pixelOutput = new Uint16Array(256 * 240); // final pixel output
+  // final pixel output
+  this.pixelOutput = new Uint16Array(256 * 240);
 
   this.reset = function() {
-    // ppu ram initialized to zeroes
     for(let i = 0; i < this.ppuRam.length; i++) {
       this.ppuRam[i] = 0;
     }
-    // palette ram as well
     for(let i = 0; i < this.paletteRam.length; i++) {
       this.paletteRam[i] = 0;
     }
-    // same for oam
     for(let i = 0; i < this.oamRam.length; i++) {
       this.oamRam[i] = 0;
     }
-    // other registers
+    for(let i = 0; i < this.secondaryOam.length; i++) {
+      this.secondaryOam[i] = 0;
+    }
+    for(let i = 0; i < this.spriteTiles.length; i++) {
+      this.spriteTiles[i] = 0;
+    }
+    for(let i = 0; i < this.pixelOutput.length; i++) {
+      this.pixelOutput[i] = 0;
+    }
+
+    // scrolling / vram address
     this.t = 0; // temporary vram address
     this.v = 0; // vram address
     this.w = 0; // write flag
     this.x = 0; // fine x scroll
+
+    // dot position
     this.line = 0;
     this.dot = 0;
     this.evenFrame = true;
-    this.oamAddress = 0;
-    this.readBuffer = 0;
+
+    // rest
+    this.oamAddress = 0; // oam address
+    this.readBuffer = 0; // 2007 buffer;
+
+    // for PPUSTAUS
     this.spriteZero = false;
     this.spriteOverflow = false;
     this.inVblank = false;
+
+    // for PPUCTRL
     this.vramIncrement = 1;
     this.spritePatternBase = 0;
     this.bgPatternBase = 0;
     this.spriteHeight = 8;
     this.slave = false;
     this.generateNmi = false;
+
+    // for PPUMASK
     this.greyScale = false;
     this.bgInLeft = false;
     this.sprInLeft = false;
     this.bgRendering = false;
     this.sprRendering = false;
     this.emphasis = 0;
+
+    // internal operation
     this.atl = 0;
     this.atr = 0;
     this.tl = 0;
     this.th = 0;
-    for(let i = 0; i < this.secondaryOam.length; i++) {
-      this.secondaryOam[i] = 0;
-    }
     this.spriteZeroIn = false;
-    for(let i = 0; i < this.spriteTiles.length; i++) {
-      this.spriteTiles[i] = 0;
-    }
     this.spriteCount = 0;
-    // pixel output
-    for(let i = 0; i < this.pixelOutput.length; i++) {
-      this.pixelOutput[i] = 0;
-    }
   }
+  this.reset();
 
   this.cycle = function() {
     if(this.line < 240) {

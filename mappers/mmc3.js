@@ -19,39 +19,34 @@ function Mmc3(nes, rom, header) {
 
   this.prgRam = new Uint8Array(0x2000);
 
-  this.mirroring = 0;
-  this.prgMode = 1;
-  this.chrMode = 1;
-  this.regSelect = 0;
   this.bankRegs = new Uint8Array(8);
 
-  this.reloadIrq = false;
-  this.irqLatch = 0;
-  this.irqEnabled = false;
-  this.irqCounter = 0;
+  this.reset = function(hard) {
+    if(hard) {
+      // clear chr ram
+      for(let i = 0; i < this.chrRam.length; i++) {
+        this.chrRam[i] = 0;
+      }
+      // clear prg ram
+      for(let i = 0; i < this.prgRam.length; i++) {
+        this.prgRam[i] = 0;
+      }
+    }
+    for(let i = 0; i < this.bankRegs.length; i++) {
+      this.bankRegs[i] = 0;
+    }
 
-  this.reset = function() {
-    // clear chr ram
-    for(let i = 0; i < this.chrRam.length; i++) {
-      this.chrRam[i] = 0;
-    }
-    // clear prg ram
-    for(let i = 0; i < this.prgRam.length; i++) {
-      this.prgRam[i] = 0;
-    }
-    // reset mapper state
     this.mirroring = 0;
     this.prgMode = 1;
     this.chrMode = 1;
     this.regSelect = 0;
-    for(let i = 0; i < this.bankRegs.length; i++) {
-      this.bankRegs[i] = 0;
-    }
+
     this.reloadIrq = false;
     this.irqLatch = 0;
     this.irqEnabled = false;
     this.irqCounter = 0;
   }
+  this.reset(true);
 
   this.getRomAdr = function(adr) {
     let bank0 = this.bankRegs[6] & ((this.banks * 2) - 1);

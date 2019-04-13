@@ -102,11 +102,11 @@ el("pause").onclick = function(e) {
 }
 
 el("reset").onclick = function(e) {
-  nes.reset();
+  nes.reset(false);
 }
 
 el("hardreset").onclick = function(e) {
-  nes.hardReset();
+  nes.reset(true);
 }
 
 el("runframe").onclick = function(e) {
@@ -117,7 +117,7 @@ el("runframe").onclick = function(e) {
 
 function loadRom(rom) {
   if(nes.loadRom(rom)) {
-    nes.hardReset();
+    nes.reset(true);
     if(!loaded && !paused) {
       requestAnimationFrame(update);
       audioHandler.start();

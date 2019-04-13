@@ -19,29 +19,21 @@ function Mmc1(nes, rom, header) {
 
   this.prgRam = new Uint8Array(0x2000);
 
-  this.shiftReg = 0;
-  this.shiftCount = 0;
-
-  this.mirroring = 0;
-  this.prgMode = 3;
-  this.chrMode = 1;
-  this.chrBank0 = 0;
-  this.chrBank1 = 0;
-  this.prgBank = 0;
-  this.ramEnable = 0;
-
-  this.reset = function() {
-    // clear chr ram
-    for(let i = 0; i < this.chrRam.length; i++) {
-      this.chrRam[i] = 0;
+  this.reset = function(hard) {
+    if(hard) {
+      // clear chr ram
+      for(let i = 0; i < this.chrRam.length; i++) {
+        this.chrRam[i] = 0;
+      }
+      // clear prg ram
+      for(let i = 0; i < this.prgRam.length; i++) {
+        this.prgRam[i] = 0;
+      }
     }
-    // clear prg ram
-    for(let i = 0; i < this.prgRam.length; i++) {
-      this.prgRam[i] = 0;
-    }
-    // reset mapper state
+
     this.shiftReg = 0;
     this.shiftCount = 0;
+
     this.mirroring = 0;
     this.prgMode = 3;
     this.chrMode = 1;
@@ -50,6 +42,7 @@ function Mmc1(nes, rom, header) {
     this.prgBank = 0;
     this.ramEnable = 0;
   }
+  this.reset(true);
 
   this.getRomAdr = function(adr) {
     switch(this.prgMode) {

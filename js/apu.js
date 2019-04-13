@@ -6,53 +6,6 @@ function Apu(nes) {
   // memory handler
   this.nes = nes;
 
-  this.cycles = 0;
-  this.frameCounter = 0;
-
-  this.interruptInhibit = false;
-  this.step5Mode = false;
-
-  this.enablePcm = false;
-  this.enableNoise = false;
-  this.enableTriangle = false;
-  this.enablePulse2 = false;
-  this.enablePulse1 = false;
-
-  // pulse 1
-  this.p1Timer = 0;
-  this.p1Duty = 0;
-  this.p1TimerValue = 0;
-  this.p1DutyIndex = 0;
-  this.p1DutyOutput = 0;
-  this.p1Volume = 0;
-  this.p1Output = 0;
-  this.p1Length = 0;
-  this.p1CounterHalt = false;
-  this.p1Counter = 0;
-
-  // pulse 2
-  this.p2Timer = 0;
-  this.p2Duty = 0;
-  this.p2TimerValue = 0;
-  this.p2DutyIndex = 0;
-  this.p2DutyOutput = 0;
-  this.p2Volume = 0;
-  this.p2Output = 0;
-  this.p2Length = 0;
-  this.p2CounterHalt = false;
-  this.p2Counter = 0;
-
-  // triangle
-  this.triTimer = 0;
-  this.triTimerValue = 0;
-  this.triStepIndex = 0;
-  this.triCounterHalt = false;
-  this.triLinearCounter = 0;
-  this.triCounter = 0;
-  this.triOutput = 0;
-  this.triReloadLinear = false;
-  this.triLinearReload = 0;
-
   // duty cycles
   this.dutyCycles = [
     [0, 1, 0, 0, 0, 0, 0, 0],
@@ -73,9 +26,14 @@ function Apu(nes) {
 
   // channel outputs
   this.output = new Float64Array(29781);
-  this.outputOffset = 0;
 
   this.reset = function() {
+    for(let i = 0; i < this.output.length; i++) {
+      this.output[i] = 0;
+    }
+
+    this.outputOffset = 0;
+
     this.cycles = 0;
     this.frameCounter = 0;
 
@@ -122,12 +80,8 @@ function Apu(nes) {
     this.triOutput = 0;
     this.triReloadLinear = false;
     this.triLinearReload = 0;
-
-    for(let i = 0; i < this.output.length; i++) {
-      this.output[i] = 0;
-    }
-    this.outputOffset = 0;
   }
+  this.reset();
 
   this.cycle = function() {
     // cpu cycle
@@ -138,7 +92,7 @@ function Apu(nes) {
       this.frameCounter = 0;
     }
     this.frameCounter++;
-    
+
     this.handleFrameCounter();
 
     this.cycleTriangle();

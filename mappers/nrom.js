@@ -20,16 +20,19 @@ function Nrom(nes, rom, header) {
 
   this.prgRam = new Uint8Array(0x2000);
 
-  this.reset = function() {
-    // clear chr ram
-    for(let i = 0; i < this.chrRam.length; i++) {
-      this.chrRam[i] = 0;
-    }
-    // clear prg ram
-    for(let i = 0; i < this.prgRam.length; i++) {
-      this.prgRam[i] = 0;
+  this.reset = function(hard) {
+    if(hard) {
+      // clear chr ram
+      for(let i = 0; i < this.chrRam.length; i++) {
+        this.chrRam[i] = 0;
+      }
+      // clear prg ram
+      for(let i = 0; i < this.prgRam.length; i++) {
+        this.prgRam[i] = 0;
+      }
     }
   }
+  this.reset(true);
 
   this.ppuLineEnd = function() {};
 
