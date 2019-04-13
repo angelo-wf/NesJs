@@ -170,28 +170,16 @@ function Cpu(mem) {
   // create a P value from the flags
   this.getP = function(bFlag) {
     let value = 0;
-    if(this.n) {
-      value |= 0x80;
-    }
-    if(this.v) {
-      value |= 0x40;
-    }
-    if(this.d) {
-      value |= 0x08;
-    }
-    if(this.i) {
-      value |= 0x04;
-    }
-    if(this.z) {
-      value |= 0x02;
-    }
-    if(this.c) {
-      value |= 0x01;
-    }
+
+    value |= this.n ? 0x80 : 0;
+    value |= this.v ? 0x40 : 0;
+    value |= this.d ? 0x08 : 0;
+    value |= this.i ? 0x04 : 0;
+    value |= this.z ? 0x02 : 0;
+    value |= this.c ? 0x01 : 0;
     value |= 0x20; // bit 5 is always set
-    if(bFlag) {
-      value |= 0x10;
-    }
+    value |= bFlag ? 0x10 : 0;
+
     return value;
   }
 
