@@ -27,6 +27,10 @@ function Apu(nes) {
   this.noiseLoadValues = [
     3, 7, 15, 31, 63, 95, 127, 159, 201, 253, 379, 507, 761, 1015, 2033, 4067
   ];
+  // dmc timer value
+  this.dmcLoadValues = [
+    213, 189, 169, 159, 142, 126, 112, 106, 94, 79, 70, 63, 52, 41, 35, 26
+  ]
 
   // channel outputs
   this.output = new Float64Array(29781);
@@ -44,7 +48,6 @@ function Apu(nes) {
     this.interruptInhibit = false;
     this.step5Mode = false;
 
-    this.enablePcm = false;
     this.enableNoise = false;
     this.enableTriangle = false;
     this.enablePulse2 = false;
@@ -121,6 +124,22 @@ function Apu(nes) {
     this.noiseEnvelopeCounter = 0;
     this.noiseEnvelopeStart = false;
 
+    // dmc
+    this.dmcInterrupt = false;
+    this.dmcLoop = false;
+    this.dmcTimer = 0;
+    this.dmcTimerValue = 0;
+    this.dmcOutput = 0;
+    this.dmcSampleAddress = 0xc000;
+    this.dmcAddress = 0xc000;
+    this.dmcSample = 0;
+    this.dmcSampleLength = 0;
+    this.dmcSampleEmpty = true;
+    this.dmcBytesLeft = 0;
+    this.dmcShifter = 0;
+    this.dmcBitsLeft = 8;
+    this.dmcSilent = true;
+
   }
   this.reset();
 
@@ -143,6 +162,7 @@ function Apu(nes) {
       this.cyclePulse1();
       this.cyclePulse2();
       this.cycleNoise();
+      this.cycleDmc();
     }
     this.cycles++;
 
@@ -219,6 +239,52 @@ function Apu(nes) {
       this.noiseOutput = (
         this.noiseConstantVolume ? this.noiseVolume : this.noiseDecay
       );
+    }
+  }
+
+  this.cycleDmc = function() {
+    if(this.dmcTimerValue !== 0) {
+      this.dmcTimerValue--;
+    } else {
+      this.dmcTimerValue = this.dmcTimer;
+      if(!this.dmcSilent) {
+        if((this.dmcShifter & 0x1) === 0) {
+          if(this.dmcOutput >= 2) {
+            this.dmcOutput -= 2;
+          }
+        } else {
+          if(this.dmcOutput <= 125) {
+            this.dmcOutput += 2;
+          }
+        }
+      }
+      this.dmcShifter >>= 1;
+      this.dmcBitsLeft--;
+      if(this.dmcBitsLeft === 0) {
+        this.dmcBitsLeft = 8;
+        if(this.dmcSampleEmpty) {
+          this.dmcSilent = true;
+        } else {
+          this.dmcSilent = false;
+          this.dmcShifter = this.dmcSample;
+          this.dmcSampleEmpty = true;
+        }
+      }
+    }
+    if(this.dmcBytesLeft > 0 && this.dmcSampleEmpty) {
+      this.dmcSampleEmpty = false;
+      this.dmcSample = this.nes.read(this.dmcAddress);
+      this.dmcAddress++;
+      if(this.dmcAddress === 0x10000) {
+        this.dmcAddress = 0x8000;
+      }
+      this.dmcBytesLeft--;
+      if(this.dmcBytesLeft === 0 && this.dmcLoop) {
+        this.dmcBytesLeft = this.dmcSampleLength;
+        this.dmcAddress = this.dmcSampleAddress;
+      } else if(this.dmcBytesLeft === 0 && this.dmcInterrupt) {
+        this.nes.dmcIrqWanted = true;
+      }
     }
   }
 
@@ -366,7 +432,7 @@ function Apu(nes) {
     let tnd = (
       0.00851 * this.triOutput +
       0.00494 * this.noiseOutput +
-      0.00335 * 0
+      0.00335 * this.dmcOutput
     );
     let pulse = 0.00752 * (this.p1Output + this.p2Output);
     return tnd + pulse;
@@ -405,6 +471,7 @@ function Apu(nes) {
       ret |= (this.p2Counter > 0) ? 0x2 : 0;
       ret |= (this.triCounter > 0) ? 0x4 : 0;
       ret |= (this.noiseCounter > 0) ? 0x8 : 0;
+      ret |= (this.dmcBytesLeft > 0) ? 0x10 : 0;
       ret |= this.nes.frameIrqWanted ? 0x40 : 0;
       ret |= this.nes.dmcIrqWanted ? 0x80 : 0;
       this.nes.frameIrqWanted = false;
@@ -524,8 +591,28 @@ function Apu(nes) {
         this.noiseEnvelopeStart = true;
         break;
       }
+      case 0x4010: {
+        this.dmcInterrupt = (value & 0x80) > 0;
+        this.dmcLoop = (value & 0x40) > 0;
+        this.dmcTimer = this.dmcLoadValues[value & 0xf];
+        if(!this.dmcInterrupt) {
+          this.nes.dmcIrqWanted = false;
+        }
+        break;
+      }
+      case 0x4011: {
+        this.dmcOutput = value & 0x7f;
+        break;
+      }
+      case 0x4012: {
+        this.dmcSampleAddress = 0xc000 | (value << 6);
+        break;
+      }
+      case 0x4013: {
+        this.dmcSampleLength = (value << 4) + 1;
+        break;
+      }
       case 0x4015: {
-        this.enablePcm = (value & 0x10) > 0;
         this.enableNoise = (value & 0x08) > 0;
         this.enableTriangle = (value & 0x04) > 0;
         this.enablePulse2 = (value & 0x02) > 0;
@@ -542,6 +629,15 @@ function Apu(nes) {
         if(!this.enableNoise) {
           this.noiseCounter = 0;
         }
+        if((value & 0x10) > 0) {
+          if(this.dmcBytesLeft === 0) {
+            this.dmcBytesLeft = this.dmcSampleLength;
+            this.dmcAddress = this.dmcSampleAddress;
+          }
+        } else {
+          this.dmcBytesLeft = 0;
+        }
+        this.nes.dmcIrqWanted = false;
         break;
       }
       case 0x4017: {
