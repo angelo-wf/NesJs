@@ -64,6 +64,14 @@ function Apu(nes) {
     this.p1Decay = 0;
     this.p1EnvelopeCounter = 0;
     this.p1EnvelopeStart = false;
+    this.p1SweepEnabled = false;
+    this.p1SweepPeriod = 0;
+    this.p1SweepNegate = false;
+    this.p1SweepShift = 0;
+    this.p1SweepTimer = 0;
+    this.p1SweepTarget = 0;
+    this.p1SweepMuting = true;
+    this.p1SweepReload = false;
 
     // pulse 2
     this.p2Timer = 0;
@@ -79,6 +87,14 @@ function Apu(nes) {
     this.p2Decay = 0;
     this.p2EnvelopeCounter = 0;
     this.p2EnvelopeStart = false;
+    this.p2SweepEnabled = false;
+    this.p2SweepPeriod = 0;
+    this.p2SweepNegate = false;
+    this.p2SweepShift = 0;
+    this.p2SweepTimer = 0;
+    this.p2SweepTarget = 0;
+    this.p2SweepMuting = true;
+    this.p2SweepReload = false;
 
     // triangle
     this.triTimer = 0;
@@ -145,7 +161,7 @@ function Apu(nes) {
       this.p1DutyOutput = this.dutyCycles[this.p1Duty][this.p1DutyIndex++];
       this.p1DutyIndex &= 0x7;
     }
-    if(this.p1DutyOutput === 0 || this.p1Timer < 8 || this.p1Counter === 0) {
+    if(this.p1DutyOutput === 0 || this.p1SweepMuting || this.p1Counter === 0) {
       this.p1Output = 0;
     } else {
       this.p1Output = this.p1ConstantVolume ? this.p1Volume : this.p1Decay;
@@ -160,7 +176,7 @@ function Apu(nes) {
       this.p2DutyOutput = this.dutyCycles[this.p2Duty][this.p2DutyIndex++];
       this.p2DutyIndex &= 0x7;
     }
-    if(this.p2DutyOutput === 0 || this.p2Timer < 8 || this.p2Counter === 0) {
+    if(this.p2DutyOutput === 0 || this.p2SweepMuting || this.p2Counter === 0) {
       this.p2Output = 0;
     } else {
       this.p2Output = this.p2ConstantVolume ? this.p2Volume : this.p2Decay;
@@ -203,6 +219,32 @@ function Apu(nes) {
       this.noiseOutput = (
         this.noiseConstantVolume ? this.noiseVolume : this.noiseDecay
       );
+    }
+  }
+
+  this.updateSweepP1 = function() {
+    let change = this.p1Timer >> this.p1SweepShift;
+    if(this.p1SweepNegate) {
+      change = (-change) - 1;
+    }
+    this.p1SweepTarget = this.p1Timer + change;
+    if(this.p1SweepTarget > 0x7ff || this.p1Timer < 8) {
+      this.p1SweepMuting = true;
+    } else {
+      this.p1SweepMuting = false;
+    }
+  }
+
+  this.updateSweepP2 = function() {
+    let change = this.p2Timer >> this.p2SweepShift;
+    if(this.p2SweepNegate) {
+      change = (-change);
+    }
+    this.p2SweepTarget = this.p2Timer + change;
+    if(this.p2SweepTarget > 0x7ff || this.p2Timer < 8) {
+      this.p2SweepMuting = true;
+    } else {
+      this.p2SweepMuting = false;
     }
   }
 
@@ -289,11 +331,43 @@ function Apu(nes) {
     if(!this.noiseCounterHalt && this.noiseCounter !== 0) {
       this.noiseCounter--;
     }
+    // handle sweeps
+    if(
+      this.p1SweepTimer === 0 && this.p1SweepEnabled &&
+      !this.p1SweepMuting && this.p1SweepShift > 0
+    ) {
+      this.p1Timer = this.p1SweepTarget;
+      this.updateSweepP1();
+    }
+    if(this.p1SweepTimer === 0 || this.p1SweepReload) {
+      this.p1SweepTimer = this.p1SweepPeriod;
+      this.p1SweepReload = false;
+    } else {
+      this.p1SweepTimer--;
+    }
+
+    if(
+      this.p2SweepTimer === 0 && this.p2SweepEnabled &&
+      !this.p2SweepMuting && this.p2SweepShift > 0
+    ) {
+      this.p2Timer = this.p2SweepTarget;
+      this.updateSweepP2();
+    }
+    if(this.p2SweepTimer === 0 || this.p2SweepReload) {
+      this.p2SweepTimer = this.p2SweepPeriod;
+      this.p2SweepReload = false;
+    } else {
+      this.p2SweepTimer--;
+    }
   }
 
   this.mix = function() {
     // from https://wiki.nesdev.com/w/index.php/APU_Mixer
-    let tnd = 0.00851 * this.triOutput + 0.00494 * this.noiseOutput + 0.00335 * 0;
+    let tnd = (
+      0.00851 * this.triOutput +
+      0.00494 * this.noiseOutput +
+      0.00335 * 0
+    );
     let pulse = 0.00752 * (this.p1Output + this.p2Output);
     return tnd + pulse;
   }
@@ -348,9 +422,19 @@ function Apu(nes) {
         this.p1ConstantVolume = (value & 0x10) > 0;
         break;
       }
+      case 0x4001: {
+        this.p1SweepEnabled = (value & 0x80) > 0;
+        this.p1SweepPeriod = (value & 0x70) >> 4;
+        this.p1SweepNegate = (value & 0x08) > 0;
+        this.p1SweepShift = value & 0x7;
+        this.p1SweepReload = true;
+        this.updateSweepP1();
+        break;
+      }
       case 0x4002: {
         this.p1Timer &= 0x700;
         this.p1Timer |= value;
+        this.updateSweepP1();
         break;
       }
       case 0x4003: {
@@ -361,6 +445,7 @@ function Apu(nes) {
           this.p1Counter = this.lengthLoadValues[(value & 0xf8) >> 3];
         }
         this.p1EnvelopeStart = true;
+        this.updateSweepP1();
         break;
       }
       case 0x4004: {
@@ -370,9 +455,19 @@ function Apu(nes) {
         this.p2ConstantVolume = (value & 0x10) > 0;
         break;
       }
+      case 0x4005: {
+        this.p2SweepEnabled = (value & 0x80) > 0;
+        this.p2SweepPeriod = (value & 0x70) >> 4;
+        this.p2SweepNegate = (value & 0x08) > 0;
+        this.p2SweepShift = value & 0x7;
+        this.p2SweepReload = true;
+        this.updateSweepP2();
+        break;
+      }
       case 0x4006: {
         this.p2Timer &= 0x700;
         this.p2Timer |= value;
+        this.updateSweepP2();
         break;
       }
       case 0x4007: {
@@ -383,6 +478,7 @@ function Apu(nes) {
           this.p2Counter = this.lengthLoadValues[(value & 0xf8) >> 3];
         }
         this.p2EnvelopeStart = true;
+        this.updateSweepP2();
         break;
       }
       case 0x4008: {

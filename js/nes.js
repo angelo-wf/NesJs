@@ -130,7 +130,7 @@ function Nes() {
       for(let j = inputPos; j < inputPos + avgCount; j++) {
         total += samples[1][j];
       }
-      data[i] = 1 - (total / avgCount) * 2;
+      data[i] = total / avgCount;
       inputPos += avgCount;
     }
   }
