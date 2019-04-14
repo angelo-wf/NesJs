@@ -25,7 +25,7 @@ function Apu(nes) {
   ];
   // noise timer values
   this.noiseLoadValues = [
-    4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
+    3, 7, 15, 31, 63, 95, 127, 159, 201, 253, 379, 507, 761, 1015, 2033, 4067
   ];
 
   // channel outputs
@@ -538,6 +538,9 @@ function Apu(nes) {
         }
         if(!this.enableTriangle) {
           this.triCounter = 0;
+        }
+        if(!this.enableNoise) {
+          this.noiseCounter = 0;
         }
         break;
       }
