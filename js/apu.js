@@ -228,12 +228,12 @@ function Apu(nes) {
       if(this.noiseTonal) {
         feedback ^= (this.noiseShift & 0x40) >> 6;
       } else {
-        feedback ^= (this.noiseShift & 0x4000) >> 14;
+        feedback ^= (this.noiseShift & 0x2) >> 1;
       }
       this.noiseShift >>= 1;
       this.noiseShift |= feedback << 14;
     }
-    if(this.noiseCounter === 0 || (this.noiseShift & 0x1) === 0) {
+    if(this.noiseCounter === 0 || (this.noiseShift & 0x1) === 1) {
       this.noiseOutput = 0;
     } else {
       this.noiseOutput = (
