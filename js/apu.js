@@ -23,11 +23,11 @@ function Apu(nes) {
   ];
   // noise timer values
   this.noiseLoadValues = [
-    3, 7, 15, 31, 63, 95, 127, 159, 201, 253, 379, 507, 761, 1015, 2033, 4067
+    4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
   ];
   // dmc timer value
   this.dmcLoadValues = [
-    213, 189, 169, 159, 142, 126, 112, 106, 94, 79, 70, 63, 52, 41, 35, 26
+    428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106, 84, 72, 54
   ]
 
   // channel outputs
@@ -40,7 +40,6 @@ function Apu(nes) {
 
     this.outputOffset = 0;
 
-    this.cycles = 0;
     this.frameCounter = 0;
 
     this.interruptInhibit = false;
@@ -140,7 +139,6 @@ function Apu(nes) {
   this.reset();
 
   this.cycle = function() {
-    // cpu cycle
     if(
       (this.frameCounter === 29830 && !this.step5Mode) ||
       this.frameCounter === 37282
@@ -152,17 +150,10 @@ function Apu(nes) {
     this.handleFrameCounter();
 
     this.cycleTriangle();
-
-    if((this.cycles & 1) === 0) {
-      // apu cycle
-      this.cyclePulse1();
-      this.cyclePulse2();
-      // TODO: is noise clocked every CPU cycle?
-      // some games (eg SMB2) have off-sounding noise (especially tonal)
-      this.cycleNoise();
-      this.cycleDmc();
-    }
-    this.cycles++;
+    this.cyclePulse1();
+    this.cyclePulse2();
+    this.cycleNoise();
+    this.cycleDmc();
 
     this.output[this.outputOffset++] = this.mix();
     if(this.outputOffset === 29781) {
@@ -175,12 +166,10 @@ function Apu(nes) {
     if(this.p1TimerValue !== 0) {
       this.p1TimerValue--;
     } else {
-      this.p1TimerValue = this.p1Timer;
+      this.p1TimerValue = (this.p1Timer * 2) + 1;
       this.p1DutyIndex++;
       this.p1DutyIndex &= 0x7;
     }
-    // TODO: does the sequencer output the value from the table, or only the
-    // index into the table?
     let output = this.dutyCycles[this.p1Duty][this.p1DutyIndex];
     if(output === 0 || this.p1SweepMuting || this.p1Counter === 0) {
       this.p1Output = 0;
@@ -193,7 +182,7 @@ function Apu(nes) {
     if(this.p2TimerValue !== 0) {
       this.p2TimerValue--;
     } else {
-      this.p2TimerValue = this.p2Timer;
+      this.p2TimerValue = (this.p2Timer * 2) + 1;
       this.p2DutyIndex++;
       this.p2DutyIndex &= 0x7;
     }
@@ -584,7 +573,7 @@ function Apu(nes) {
       }
       case 0x400e: {
         this.noiseTonal = (value & 0x80) > 0;
-        this.noiseTimer = this.noiseLoadValues[value & 0xf];
+        this.noiseTimer = this.noiseLoadValues[value & 0xf] - 1;
         break;
       }
       case 0x400f: {
@@ -597,7 +586,7 @@ function Apu(nes) {
       case 0x4010: {
         this.dmcInterrupt = (value & 0x80) > 0;
         this.dmcLoop = (value & 0x40) > 0;
-        this.dmcTimer = this.dmcLoadValues[value & 0xf];
+        this.dmcTimer = this.dmcLoadValues[value & 0xf] - 1;
         if(!this.dmcInterrupt) {
           this.nes.dmcIrqWanted = false;
         }
