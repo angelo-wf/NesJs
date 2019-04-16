@@ -19,6 +19,13 @@ function AudioHandler() {
     this.scriptNode = undefined;
   }
 
+  this.resume = function() {
+    // for Chrome autoplay policy
+    if(this.hasAudio) {
+      this.actx.resume();
+    }
+  }
+
   this.start = function() {
     if(this.hasAudio) {
 

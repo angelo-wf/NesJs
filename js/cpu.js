@@ -123,13 +123,10 @@ function Cpu(mem) {
 
   this.cycle = function() {
     if(this.cyclesLeft <= 0) {
-      // read the instruction byte
+      // read the instruction byte and get the info
       let instr = this.mem.read(this.br[PC]++);
-      // get the addressing mode
       let mode = this.addressingModes[instr];
-      // get the cycle count
       let cycles = this.cycles[instr] - 1;
-      // get if the instructing can have extra cycles
       let canHaveExtra = this.canTakeExtra[instr];
       // test for wanting an interrupt
       if(this.nmiWanted || (this.irqWanted && !this.i)) {
@@ -146,9 +143,8 @@ function Cpu(mem) {
         cycles = 7 - 1;
         canHaveExtra = false;
       }
-      // get the effective address
+      // get the effective address, and execute the instruction
       let eff = this.getAdr(mode);
-      // execute the instruction
       let tbr = this.functions[instr].call(this, eff[0], instr);
       // set possible extra cycles
       if(tbr) {

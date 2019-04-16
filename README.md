@@ -2,7 +2,7 @@
 
 Yet another NES emulator, in javascript.
 
-In development.
+Try it online [here](https://elzo-d.github.io/NesJs/).
 
 The CPU has all official instructions emulated, but it is not cycle-accurate (and doesn't emulate undocumented instructions).
 The PPU has full background and sprite rendering, but it is also not cycle-accurate. The APU emulates all 5 channels, but it is again not fully accurate.
@@ -29,8 +29,6 @@ Roms can be loaded from zip-files as well, which will load the first file with a
 ## Usage
 
 - Clone this repository.
-- Download [zip.js](https://gildas-lormeau.github.io/zip.js/).
-- Create a `lib` folder and copy `WebContent/zip.js` and `WebContent/inflate.js` from zip.js into it.
 - Open `index.html` in a browser. Messing around with the browsers autoplay policy might be required.
 
 Commenting out `js/main.js`, and uncommenting the `js/nestest.nes.js`, `js/nestest.log.js` and `js/testing.js` scripts runs a simple test comparing this emulator running nestest with a 'golden' nestest log. Currently runs equally until it starts using undocumented opcodes.

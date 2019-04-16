@@ -1,8 +1,6 @@
 
 function Apu(nes) {
 
-  // TODO: noise, dmc, sweep units, volume enevlope
-
   // memory handler
   this.nes = nes;
 
@@ -58,7 +56,6 @@ function Apu(nes) {
     this.p1TimerValue = 0;
     this.p1Duty = 0;
     this.p1DutyIndex = 0;
-    this.p1DutyOutput = 0;
     this.p1Output = 0;
     this.p1CounterHalt = false;
     this.p1Counter = 0;
@@ -81,7 +78,6 @@ function Apu(nes) {
     this.p2TimerValue = 0;
     this.p2Duty = 0;
     this.p2DutyIndex = 0;
-    this.p2DutyOutput = 0;
     this.p2Output = 0;
     this.p2CounterHalt = false;
     this.p2Counter = 0;
@@ -161,6 +157,8 @@ function Apu(nes) {
       // apu cycle
       this.cyclePulse1();
       this.cyclePulse2();
+      // TODO: is noise clocked every CPU cycle?
+      // some games (eg SMB2) have off-sounding noise (especially tonal)
       this.cycleNoise();
       this.cycleDmc();
     }
@@ -178,10 +176,13 @@ function Apu(nes) {
       this.p1TimerValue--;
     } else {
       this.p1TimerValue = this.p1Timer;
-      this.p1DutyOutput = this.dutyCycles[this.p1Duty][this.p1DutyIndex++];
+      this.p1DutyIndex++;
       this.p1DutyIndex &= 0x7;
     }
-    if(this.p1DutyOutput === 0 || this.p1SweepMuting || this.p1Counter === 0) {
+    // TODO: does the sequencer output the value from the table, or only the
+    // index into the table?
+    let output = this.dutyCycles[this.p1Duty][this.p1DutyIndex];
+    if(output === 0 || this.p1SweepMuting || this.p1Counter === 0) {
       this.p1Output = 0;
     } else {
       this.p1Output = this.p1ConstantVolume ? this.p1Volume : this.p1Decay;
@@ -193,10 +194,11 @@ function Apu(nes) {
       this.p2TimerValue--;
     } else {
       this.p2TimerValue = this.p2Timer;
-      this.p2DutyOutput = this.dutyCycles[this.p2Duty][this.p2DutyIndex++];
+      this.p2DutyIndex++;
       this.p2DutyIndex &= 0x7;
     }
-    if(this.p2DutyOutput === 0 || this.p2SweepMuting || this.p2Counter === 0) {
+    let output = this.dutyCycles[this.p2Duty][this.p2DutyIndex];
+    if(output === 0 || this.p2SweepMuting || this.p2Counter === 0) {
       this.p2Output = 0;
     } else {
       this.p2Output = this.p2ConstantVolume ? this.p2Volume : this.p2Decay;
@@ -552,10 +554,11 @@ function Apu(nes) {
         this.triCounterHalt = (value & 0x80) > 0;
         this.triLinearReload = value & 0x7f;
 
-        // TODO: is this a mistake in the nesdev wiki?
+        // looks like this is a mistake in the nesdev wiki
         // http://forums.nesdev.com/viewtopic.php?f=3&t=13767#p163155
         // doesn't do this, neither does Mesen,
         // and doing it breaks SMB2's triangle between notes
+
         // this.triReloadLinear = true;
         break;
       }

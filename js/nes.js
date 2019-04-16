@@ -206,14 +206,15 @@ function Nes() {
         let ret = this.latchedControl1State & 1;
         this.latchedControl1State >>= 1;
         this.latchedControl1State |= 0x80; // set bit 7
-        // TODO: actually implement open bus
+        // supposed to be open bus, but is usually the high byte of the address
+        // which is 0x4016, so open bus would be 0x40
         return ret | 0x40;
       }
       if(adr === 0x4017) {
         let ret = this.latchedControl2State & 1;
         this.latchedControl2State >>= 1;
         this.latchedControl2State |= 0x80; // set bit 7
-        // TODO: actually implement open bus
+        // same as 0x4016
         return ret | 0x40;
       }
       return this.apu.read(adr);

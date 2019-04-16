@@ -34,12 +34,8 @@ let controlsP2 = {
 zip.workerScriptsPath = "lib/";
 zip.useWebWorkers = false;
 
-// let c2 = el("nametables");
-// c2.width = 8 * 32;
-// c2.height = 8 * 64;
-// let ctx2 = c2.getContext("2d");
-
 el("rom").onchange = function(e) {
+  audioHandler.resume();
   let freader = new FileReader();
   freader.onload = function() {
     let buf = freader.result;

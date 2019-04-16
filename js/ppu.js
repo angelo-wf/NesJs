@@ -113,8 +113,7 @@ function Ppu(nes) {
         this.spriteZeroIn = false;
         this.spriteCount = 0;
         if(this.bgRendering || this.sprRendering) {
-          // notify mapper that we're at the end of the line
-          // TODO: inaccurate timing
+          // notify mapper that we're at the end of the line (not accurate)
           this.nes.mapper.ppuLineEnd();
           // do sprite evaluation and sprite tile fetching
           this.evaluateSprites();
@@ -154,8 +153,7 @@ function Ppu(nes) {
         this.spriteZeroIn = false;
         this.spriteCount = 0;
         if(this.bgRendering || this.sprRendering) {
-          // notify mapper that we're at the end of the line
-          // TODO: inaccurate timing
+          // notify mapper that we're at the end of the line (not accurate)
           this.nes.mapper.ppuLineEnd();
         }
       } else if(this.dot === 280) {
