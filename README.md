@@ -4,7 +4,7 @@ Yet another NES emulator, in javascript.
 
 Try it online [here](https://elzo-d.github.io/NesJs/).
 
-The CPU has most instructions emulated, but it is not cycle-accurate (and doesn't emulate the 'unstable' undocumented instructions).
+The CPU has almost all instructions emulated, but it is not cycle-accurate (and doesn't emulate the 'unstable' undocumented instructions).
 The PPU has full background and sprite rendering, but it is also not cycle-accurate. The APU emulates all 5 channels, but it is again not fully accurate.
 There are also some other inaccuracies (with OAM-DMA and such).
 Most games however seem to run fine.

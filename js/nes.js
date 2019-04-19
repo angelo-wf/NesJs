@@ -59,40 +59,16 @@ function Nes() {
       return false;
     }
     let header = this.parseHeader(rom);
-    try {
-      switch(header.mapper) {
-        case 0: {
-          this.mapper = new Nrom(this, rom, header);
-          break;
-        }
-        case 1: {
-          this.mapper = new Mmc1(this, rom, header);
-          break;
-        }
-        case 2: {
-          this.mapper = new Uxrom(this, rom, header);
-          break;
-        }
-        case 3: {
-          this.mapper = new Cnrom(this, rom, header);
-          break;
-        }
-        case 4: {
-          this.mapper = new Mmc3(this, rom, header);
-          break;
-        }
-        case 7: {
-          this.mapper = new Axrom(this, rom, header);
-          break;
-        }
-        default: {
-          log("Unsupported mapper: " + header.mapper);
-          return false;
-        }
-      }
-    } catch(e) {
-      log("Rom load error: " + e);
+    if(mappers[header.mapper] === undefined) {
+      log("Unsupported mapper: " + header.mapper);
       return false;
+    } else {
+      try {
+        this.mapper = new mappers[header.mapper](this, rom, header);
+      } catch(e) {
+        log("Rom load error: " + e);
+        return false;
+      }
     }
     log(
       "Loaded " + this.mapper.name + " rom: " + this.mapper.banks +

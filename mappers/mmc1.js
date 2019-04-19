@@ -1,5 +1,5 @@
 
-function Mmc1(nes, rom, header) {
+mappers[1] = function(nes, rom, header) {
   this.name = "MMC1";
 
   this.nes = nes;

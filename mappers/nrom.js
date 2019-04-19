@@ -1,5 +1,5 @@
 
-function Nrom(nes, rom, header) {
+mappers[0] = function(nes, rom, header) {
   this.name = "NROM";
 
   this.nes = nes;

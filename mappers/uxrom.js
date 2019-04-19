@@ -1,5 +1,5 @@
 
-function Uxrom(nes, rom, header) {
+mappers[2] = function(nes, rom, header) {
   this.name = "UxROM";
 
   this.nes = nes;

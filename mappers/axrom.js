@@ -1,5 +1,5 @@
 
-function Axrom(nes, rom, header) {
+mappers[7] = function(nes, rom, header) {
   this.name = "AxROM";
 
   this.nes = nes;
