@@ -30,6 +30,22 @@ function Cnrom(nes, rom, header) {
   }
   this.reset(true);
 
+  this.getRomAdr = function(adr) {
+    if(this.banks === 2) {
+      return adr & 0x7fff;
+    }
+    return adr & 0x3fff;
+  }
+
+  this.getMirroringAdr = function(adr) {
+    if(this.verticalMirroring) {
+      return adr & 0x7ff;
+    } else {
+      // horizontal
+      return (adr & 0x3ff) | ((adr & 0x800) >> 1);
+    }
+  }
+
   this.getChrAdr = function(adr) {
     let bankCount = this.chrBanks;
     if(bankCount === 0) {
@@ -45,11 +61,7 @@ function Cnrom(nes, rom, header) {
     if(adr < 0x8000) {
       return 0; // not readable
     }
-    if(this.banks === 2) {
-      return this.rom[this.base + (adr & 0x7fff)];
-    } else {
-      return this.rom[this.base + (adr & 0x3fff)];
-    }
+    return this.rom[this.base + this.getRomAdr(adr)];
   }
 
   this.write = function(adr, value) {
@@ -71,12 +83,7 @@ function Cnrom(nes, rom, header) {
         ]];
       }
     } else {
-      if(this.verticalMirroring) {
-        return [false, (adr & 0x7ff)];
-      } else {
-        // horizontal
-        return [false, ((adr & 0x3ff) | ((adr & 0x800) >> 1))];
-      }
+      return [false, this.getMirroringAdr(adr)];
     }
   }
 
@@ -92,12 +99,7 @@ function Cnrom(nes, rom, header) {
         return [true, 0];
       }
     } else {
-      if(this.verticalMirroring) {
-        return [false, (adr & 0x7ff)];
-      } else {
-        // horizontal
-        return [false, ((adr & 0x3ff) | ((adr & 0x800) >> 1))];
-      }
+      return [false, this.getMirroringAdr(adr)];
     }
   }
 

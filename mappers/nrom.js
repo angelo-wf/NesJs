@@ -34,6 +34,26 @@ function Nrom(nes, rom, header) {
   }
   this.reset(true);
 
+  this.getRomAdr = function(adr) {
+    if(this.banks === 2) {
+      return adr & 0x7fff;
+    }
+    return adr & 0x3fff;
+  }
+
+  this.getMirroringAdr = function(adr) {
+    if(this.verticalMirroring) {
+      return adr & 0x7ff;
+    } else {
+      // horizontal
+      return (adr & 0x3ff) | ((adr & 0x800) >> 1);
+    }
+  }
+
+  this.getChrAdr = function(adr) {
+    return adr;
+  }
+
   this.ppuLineEnd = function() {};
 
   this.read = function(adr) {
@@ -43,11 +63,7 @@ function Nrom(nes, rom, header) {
     if(adr < 0x8000) {
       return this.prgRam[adr & 0x1fff];
     }
-    if(this.banks === 2) {
-      return this.rom[this.base + (adr & 0x7fff)];
-    } else {
-      return this.rom[this.base + (adr & 0x3fff)];
-    }
+    return this.rom[this.base + this.getRomAdr(adr)];
   }
 
   this.write = function(adr, value) {
@@ -62,17 +78,14 @@ function Nrom(nes, rom, header) {
   this.ppuRead = function(adr) {
     if(adr < 0x2000) {
       if(this.chrBanks === 0) {
-        return [true, this.chrRam[adr]];
+        return [true, this.chrRam[this.getChrAdr(adr)]];
       } else {
-        return [true, this.rom[this.base + 0x4000 * this.banks + adr]];
+        return [true, this.rom[
+          this.base + 0x4000 * this.banks + this.getChrAdr(adr)
+        ]];
       }
     } else {
-      if(this.verticalMirroring) {
-        return [false, (adr & 0x7ff)];
-      } else {
-        // horizontal
-        return [false, ((adr & 0x3ff) | ((adr & 0x800) >> 1))];
-      }
+      return [false, this.getMirroringAdr(adr)];
     }
   }
 
@@ -81,19 +94,14 @@ function Nrom(nes, rom, header) {
   this.ppuWrite = function(adr, value) {
     if(adr < 0x2000) {
       if(this.chrBanks === 0) {
-        this.chrRam[adr] = value;
+        this.chrRam[this.getChrAdr(adr)] = value;
         return [true, 0];
       } else {
         // not writable
         return [true, 0];
       }
     } else {
-      if(this.verticalMirroring) {
-        return [false, (adr & 0x7ff)];
-      } else {
-        // horizontal
-        return [false, ((adr & 0x3ff) | ((adr & 0x800) >> 1))];
-      }
+      return [false, this.getMirroringAdr(adr)];
     }
   }
 
