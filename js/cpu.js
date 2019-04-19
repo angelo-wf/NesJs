@@ -61,62 +61,62 @@ function Cpu(mem) {
 
   this.addressingModes = [
     //x0 x1   x2   x3   x4   x5   x6   x7   x8   x9   xa   xb   xc   xd   xe   xf
-    IMP, IZX, IMP, IMP, IMP, ZP , ZP , IMP, IMP, IMM, IMP, IMP, IMP, ABS, ABS, IMP, //0x
-    REL, IZY, IMP, IMP, IMP, ZPX, ZPX, IMP, IMP, ABY, IMP, IMP, IMP, ABX, ABX, IMP, //1x
-    ABS, IZX, IMP, IMP, ZP , ZP , ZP , IMP, IMP, IMM, IMP, IMP, ABS, ABS, ABS, IMP, //2x
-    REL, IZY, IMP, IMP, IMP, ZPX, ZPX, IMP, IMP, ABY, IMP, IMP, IMP, ABX, ABX, IMP, //3x
-    IMP, IZX, IMP, IMP, IMP, ZP , ZP , IMP, IMP, IMM, IMP, IMP, ABS, ABS, ABS, IMP, //4x
-    REL, IZY, IMP, IMP, IMP, ZPX, ZPX, IMP, IMP, ABY, IMP, IMP, IMP, ABX, ABX, IMP, //5x
-    IMP, IZX, IMP, IMP, IMP, ZP , ZP , IMP, IMP, IMM, IMP, IMP, IND, ABS, ABS, IMP, //6x
-    REL, IZY, IMP, IMP, IMP, ZPX, ZPX, IMP, IMP, ABY, IMP, IMP, IMP, ABX, ABX, IMP, //7x
-    IMP, IZX, IMP, IMP, ZP , ZP , ZP , IMP, IMP, IMP, IMP, IMP, ABS, ABS, ABS, IMP, //8x
-    REL, IZY, IMP, IMP, ZPX, ZPX, ZPY, IMP, IMP, ABY, IMP, IMP, IMP, ABX, IMP, IMP, //9x
-    IMM, IZX, IMM, IMP, ZP , ZP , ZP , IMP, IMP, IMM, IMP, IMP, ABS, ABS, ABS, IMP, //ax
-    REL, IZY, IMP, IMP, ZPX, ZPX, ZPY, IMP, IMP, ABY, IMP, IMP, ABX, ABX, ABY, IMP, //bx
-    IMM, IZX, IMP, IMP, ZP , ZP , ZP , IMP, IMP, IMM, IMP, IMP, ABS, ABS, ABS, IMP, //cx
-    REL, IZY, IMP, IMP, IMP, ZPX, ZPX, IMP, IMP, ABY, IMP, IMP, IMP, ABX, ABX, IMP, //dx
-    IMM, IZX, IMP, IMP, ZP , ZP , ZP , IMP, IMP, IMM, IMP, IMP, ABS, ABS, ABS, IMP, //ex
-    REL, IZY, IMP, IMP, IMP, ZPX, ZPX, IMP, IMP, ABY, IMP, IMP, IMP, ABX, ABX, IMP, //fx
+    IMP, IZX, IMP, IZX, ZP , ZP , ZP , ZP , IMP, IMM, IMP, IMM, ABS, ABS, ABS, ABS, //0x
+    REL, IZY, IMP, IZY, ZPX, ZPX, ZPX, ZPX, IMP, ABY, IMP, ABY, ABX, ABX, ABX, ABX, //1x
+    ABS, IZX, IMP, IZX, ZP , ZP , ZP , ZP , IMP, IMM, IMP, IMM, ABS, ABS, ABS, ABS, //2x
+    REL, IZY, IMP, IZY, ZPX, ZPX, ZPX, ZPX, IMP, ABY, IMP, ABY, ABX, ABX, ABX, ABX, //3x
+    IMP, IZX, IMP, IZX, ZP , ZP , ZP , ZP , IMP, IMM, IMP, IMM, ABS, ABS, ABS, ABS, //4x
+    REL, IZY, IMP, IZY, ZPX, ZPX, ZPX, ZPX, IMP, ABY, IMP, ABY, ABX, ABX, ABX, ABX, //5x
+    IMP, IZX, IMP, IZX, ZP , ZP , ZP , ZP , IMP, IMM, IMP, IMM, IND, ABS, ABS, ABS, //6x
+    REL, IZY, IMP, IZY, ZPX, ZPX, ZPX, ZPX, IMP, ABY, IMP, ABY, ABX, ABX, ABX, ABX, //7x
+    IMM, IZX, IMM, IZX, ZP , ZP , ZP , ZP , IMP, IMM, IMP, IMM, ABS, ABS, ABS, ABS, //8x
+    REL, IZY, IMP, IZY, ZPX, ZPX, ZPY, ZPY, IMP, ABY, IMP, ABY, ABX, ABX, ABY, ABY, //9x
+    IMM, IZX, IMM, IZX, ZP , ZP , ZP , ZP , IMP, IMM, IMP, IMM, ABS, ABS, ABS, ABS, //ax
+    REL, IZY, IMP, IZY, ZPX, ZPX, ZPY, ZPY, IMP, ABY, IMP, ABY, ABX, ABX, ABY, ABY, //bx
+    IMM, IZX, IMM, IZX, ZP , ZP , ZP , ZP , IMP, IMM, IMP, IMM, ABS, ABS, ABS, ABS, //cx
+    REL, IZY, IMP, IZY, ZPX, ZPX, ZPX, ZPX, IMP, ABY, IMP, ABY, ABX, ABX, ABX, ABX, //dx
+    IMM, IZX, IMM, IZX, ZP , ZP , ZP , ZP , IMP, IMM, IMP, IMM, ABS, ABS, ABS, ABS, //ex
+    REL, IZY, IMP, IZY, ZPX, ZPX, ZPX, ZPX, IMP, ABY, IMP, ABY, ABX, ABX, ABX, ABX, //fx
   ];
 
   this.cycles = [
     //0x1 x2 x3 x4 x5 x6 x7 x8 x9 xa xb xc xd xe xf
-    7, 6, 0, 0, 0, 3, 5, 0, 3, 2, 2, 0, 0, 4, 6, 0, //0x
-    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, //1x
-    6, 6, 0, 0, 3, 3, 5, 0, 4, 2, 2, 0, 4, 4, 6, 0, //2x
-    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, //3x
-    6, 6, 0, 0, 0, 3, 5, 0, 3, 2, 2, 0, 3, 4, 6, 0, //4x
-    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, //5x
-    6, 6, 0, 0, 0, 3, 5, 0, 4, 2, 2, 0, 5, 4, 6, 0, //6x
-    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, //7x
-    0, 6, 0, 0, 3, 3, 3, 0, 2, 0, 2, 0, 4, 4, 4, 0, //8x
-    2, 6, 0, 0, 4, 4, 4, 0, 2, 5, 2, 0, 0, 5, 0, 0, //9x
-    2, 6, 2, 0, 3, 3, 3, 0, 2, 2, 2, 0, 4, 4, 4, 0, //ax
-    2, 5, 0, 0, 4, 4, 4, 0, 2, 4, 2, 0, 4, 4, 4, 0, //bx
-    2, 6, 0, 0, 3, 3, 5, 0, 2, 2, 2, 0, 4, 4, 6, 0, //cx
-    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, //dx
-    2, 6, 0, 0, 3, 3, 5, 0, 2, 2, 2, 0, 4, 4, 6, 0, //ex
-    2, 5, 0, 0, 0, 4, 6, 0, 2, 4, 0, 0, 0, 4, 7, 0, //fx
+    7, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 4, 4, 6, 6, //0x
+    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7, //1x
+    6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 4, 4, 6, 6, //2x
+    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7, //3x
+    6, 6, 2, 8, 3, 3, 5, 5, 3, 2, 2, 2, 3, 4, 6, 6, //4x
+    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7, //5x
+    6, 6, 2, 8, 3, 3, 5, 5, 4, 2, 2, 2, 5, 4, 6, 6, //6x
+    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7, //7x
+    2, 6, 2, 6, 3, 3, 3, 3, 2, 2, 2, 2, 4, 4, 4, 4, //8x
+    2, 6, 2, 6, 4, 4, 4, 4, 2, 5, 2, 5, 5, 5, 5, 5, //9x
+    2, 6, 2, 6, 3, 3, 3, 3, 2, 2, 2, 2, 4, 4, 4, 4, //ax
+    2, 5, 2, 5, 4, 4, 4, 4, 2, 4, 2, 4, 4, 4, 4, 4, //bx
+    2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6, //cx
+    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7, //dx
+    2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6, //ex
+    2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7, //fx
   ]
 
   this.canTakeExtra = [
     //x0   x1     x2     x3     x4     x5     x6     x7     x8     x9     xa     xb     xc     xd     xe     xf
     false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, //0x
-    true , true , false, false, false, false, false, false, false, true , false, false, false, true , false, false, //1x
+    true , true , false, false, false, false, false, false, false, true , false, false, true , true , false, false, //1x
     false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, //2x
-    true , true , false, false, false, false, false, false, false, true , false, false, false, true , false, false, //3x
+    true , true , false, false, false, false, false, false, false, true , false, false, true , true , false, false, //3x
     false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, //4x
-    true , true , false, false, false, false, false, false, false, true , false, false, false, true , false, false, //5x
+    true , true , false, false, false, false, false, false, false, true , false, false, true , true , false, false, //5x
     false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, //6x
-    true , true , false, false, false, false, false, false, false, true , false, false, false, true , false, false, //7x
+    true , true , false, false, false, false, false, false, false, true , false, false, true , true , false, false, //7x
     false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, //8x
     true , false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, //9x
     false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, //ax
-    true , true , false, false, false, false, false, false, false, true , false, false, true , true , true , false, //bx
+    true , true , false, true , false, false, false, false, false, true , false, true , true , true , true , true , //bx
     false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, //cx
-    true , true , false, false, false, false, false, false, false, true , false, false, false, true , false, false, //dx
+    true , true , false, false, false, false, false, false, false, true , false, false, true , true , false, false, //dx
     false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, //ex
-    true , true , false, false, false, false, false, false, false, true , false, false, false, true , false, false, //fx
+    true , true , false, false, false, false, false, false, false, true , false, false, true , true , false, false, //fx
   ];
 
   // function table is at bottom
@@ -801,25 +801,165 @@ function Cpu(mem) {
     return false;
   }
 
+  // undocumented opcodes
+
+  this.kil = function(adr) {
+    // stopts the cpu
+    this.br[PC]--;
+    return false;
+  }
+
+  this.slo = function(adr) {
+    // shifts a memory location left 1, ORs a with the result, sets N, Z and C
+    let result = this.mem.read(adr) << 1;
+    this.c = result > 0xff;
+    this.mem.write(adr, result);
+    this.r[A] |= result;
+    this.setZandN(this.r[A]);
+    return false;
+  }
+
+  this.rla = function(adr) {
+    // rolls a memory location left 1, ANDs a with the result, sets N, Z and C
+    let result = (this.mem.read(adr) << 1) | (this.c ? 1 : 0);
+    this.c = result > 0xff;
+    this.mem.write(adr, result);
+    this.r[A] &= result;
+    this.setZandN(this.r[A]);
+    return false;
+  }
+
+  this.sre = function(adr) {
+    // shifts a memory location right 1, XORs A with the result, sets N, Z and C
+    let value = this.mem.read(adr);
+    let carry = value & 0x1;
+    let result = value >> 1;
+    this.c = carry > 0;
+    this.mem.write(adr, result);
+    this.r[A] ^= result;
+    this.setZandN(this.r[A]);
+    return false;
+  }
+
+  this.rra = function(adr) {
+    // rolls a memory location right 1, adds the result to A, sets N, Z, C and V
+    let value = this.mem.read(adr);
+    let carry = value & 0x1;
+    let result = (value >> 1) | ((this.c ? 1 : 0) << 7);
+    this.c = carry > 0;
+    this.mem.write(adr, result);
+    let addResult = this.r[A] + result + (this.c ? 1 : 0);
+    this.c = addResult > 0xff;
+    this.v = (
+      (this.r[A] & 0x80) === (result & 0x80) &&
+      (result & 0x80) !== (addResult & 0x80)
+    );
+    this.r[A] = addResult;
+    this.setZandN(this.r[A]);
+    return false;
+  }
+
+  this.sax = function(adr) {
+    // stores A ANDed with X to a memory location
+    this.mem.write(adr, this.r[A] & this.r[X]);
+    return false;
+  }
+
+  this.lax = function(adr) {
+    // loads A and X with a value
+    this.r[A] = this.mem.read(adr);
+    this.r[X] = this.r[A];
+    this.setZandN(this.r[X]);
+    return false;
+  }
+
+  this.dcp = function(adr) {
+    // decrement a memory location, and sets C, Z and N to what A - result does
+    let value = (this.mem.read(adr) - 1) & 0xff;
+    this.mem.write(adr, value);
+    value ^= 0xff;
+    let result = this.r[A] + value + 1;
+    this.c = result > 0xff;
+    this.setZandN(result & 0xff);
+    return false;
+  }
+
+  this.isc = function(adr) {
+    // increments a memory location, and subtract it+!C from A, sets Z, N, V, C
+    let value = (this.mem.read(adr) + 1) & 0xff;
+    this.mem.write(adr, value);
+    value ^= 0xff;
+    let result = this.r[A] + value + (this.c ? 1 : 0);
+    this.c = result > 0xff;
+    this.v = (
+      (this.r[A] & 0x80) === (value & 0x80) &&
+      (value & 0x80) !== (result & 0x80)
+    );
+    this.r[A] = result;
+    this.setZandN(this.r[A]);
+    return false;
+  }
+
+  this.anc = function(adr) {
+    // ANDs a with the value, sets Z and N, then sets C to N
+    this.r[A] &= this.mem.read(adr);
+    this.setZandN(this.r[A]);
+    this.c = this.n;
+    return false;
+  }
+
+  this.alr = function(adr) {
+    // ANDs a with the value, then shifts A right 1, sets C, Z and N
+    this.r[A] &= this.mem.read(adr);
+    let carry = this.r[A] & 0x1;
+    let result = this.r[A] >> 1;
+    this.c = carry > 0;
+    this.setZandN(result);
+    this.r[A] = result;
+    return false;
+  }
+
+  this.arr = function(adr) {
+    // ANDs a with the value, then rolls A right 1, sets Z, N, C and V oddly
+    this.r[A] &= this.mem.read(adr);
+    let result = (this.r[A] >> 1) | ((this.c ? 1 : 0) << 7);
+    this.setZandN(result);
+    this.c = (result & 0x40) > 0;
+    this.v = ((result & 0x40) ^ ((result & 0x20) << 1)) > 0;
+    this.r[A] = result;
+    return false;
+  }
+
+  this.axs = function(adr) {
+    // sets X to A ANDed with X minus the value, sets N, Z and C
+    let value = mem.read(adr) ^ 0xff;
+    let andedA = this.r[A] & this.r[X];
+    let result = andedA + value + 1;
+    this.c = result > 0xff;
+    this.r[X] = result;
+    this.setZandN(this.r[X]);
+    return false;
+  }
+
   // function table
   this.functions = [
     //x0      x1        x2        x3        x4        x5        x6        x7        x8        x9        xa        xb        xc        xd        xe        xf
-    this.brk, this.ora, this.uni, this.uni, this.uni, this.ora, this.asl, this.uni, this.php, this.ora, this.asla,this.uni, this.uni, this.ora, this.asl, this.uni, //0x
-    this.bpl, this.ora, this.uni, this.uni, this.uni, this.ora, this.asl, this.uni, this.clc, this.ora, this.uni, this.uni, this.uni, this.ora, this.asl, this.uni, //1x
-    this.jsr, this.and, this.uni, this.uni, this.bit, this.and, this.rol, this.uni, this.plp, this.and, this.rola,this.uni, this.bit, this.and, this.rol, this.uni, //2x
-    this.bmi, this.and, this.uni, this.uni, this.uni, this.and, this.rol, this.uni, this.sec, this.and, this.uni, this.uni, this.uni, this.and, this.rol, this.uni, //3x
-    this.rti, this.eor, this.uni, this.uni, this.uni, this.eor, this.lsr, this.uni, this.pha, this.eor, this.lsra,this.uni, this.jmp, this.eor, this.lsr, this.uni, //4x
-    this.bvc, this.eor, this.uni, this.uni, this.uni, this.eor, this.lsr, this.uni, this.cli, this.eor, this.uni, this.uni, this.uni, this.eor, this.lsr, this.uni, //5x
-    this.rts, this.adc, this.uni, this.uni, this.uni, this.adc, this.ror, this.uni, this.pla, this.adc, this.rora,this.uni, this.jmp, this.adc, this.ror, this.uni, //6x
-    this.bvs, this.adc, this.uni, this.uni, this.uni, this.adc, this.ror, this.uni, this.sei, this.adc, this.uni, this.uni, this.uni, this.adc, this.ror, this.uni, //7x
-    this.uni, this.sta, this.uni, this.uni, this.sty, this.sta, this.stx, this.uni, this.dey, this.uni, this.txa, this.uni, this.sty, this.sta, this.stx, this.uni, //8x
-    this.bcc, this.sta, this.uni, this.uni, this.sty, this.sta, this.stx, this.uni, this.tya, this.sta, this.txs, this.uni, this.uni, this.sta, this.uni, this.uni, //9x
-    this.ldy, this.lda, this.ldx, this.uni, this.ldy, this.lda, this.ldx, this.uni, this.tay, this.lda, this.tax, this.uni, this.ldy, this.lda, this.ldx, this.uni, //ax
-    this.bcs, this.lda, this.uni, this.uni, this.ldy, this.lda, this.ldx, this.uni, this.clv, this.lda, this.tsx, this.uni, this.ldy, this.lda, this.ldx, this.uni, //bx
-    this.cpy, this.cmp, this.uni, this.uni, this.cpy, this.cmp, this.dec, this.uni, this.iny, this.cmp, this.dex, this.uni, this.cpy, this.cmp, this.dec, this.uni, //cx
-    this.bne, this.cmp, this.uni, this.uni, this.uni, this.cmp, this.dec, this.uni, this.cld, this.cmp, this.uni, this.uni, this.uni, this.cmp, this.dec, this.uni, //dx
-    this.cpx, this.sbc, this.uni, this.uni, this.cpx, this.sbc, this.inc, this.uni, this.inx, this.sbc, this.nop, this.uni, this.cpx, this.sbc, this.inc, this.uni, //ex
-    this.beq, this.sbc, this.uni, this.uni, this.uni, this.sbc, this.inc, this.uni, this.sed, this.sbc, this.uni, this.uni, this.uni, this.sbc, this.inc, this.uni, //fx
+    this.brk, this.ora, this.kil, this.slo, this.nop, this.ora, this.asl, this.slo, this.php, this.ora, this.asla,this.anc, this.nop, this.ora, this.asl, this.slo, //0x
+    this.bpl, this.ora, this.kil, this.slo, this.nop, this.ora, this.asl, this.slo, this.clc, this.ora, this.nop, this.slo, this.nop, this.ora, this.asl, this.slo, //1x
+    this.jsr, this.and, this.kil, this.rla, this.bit, this.and, this.rol, this.rla, this.plp, this.and, this.rola,this.anc, this.bit, this.and, this.rol, this.rla, //2x
+    this.bmi, this.and, this.kil, this.rla, this.nop, this.and, this.rol, this.rla, this.sec, this.and, this.nop, this.rla, this.nop, this.and, this.rol, this.rla, //3x
+    this.rti, this.eor, this.kil, this.sre, this.nop, this.eor, this.lsr, this.sre, this.pha, this.eor, this.lsra,this.alr, this.jmp, this.eor, this.lsr, this.sre, //4x
+    this.bvc, this.eor, this.kil, this.sre, this.nop, this.eor, this.lsr, this.sre, this.cli, this.eor, this.nop, this.sre, this.nop, this.eor, this.lsr, this.sre, //5x
+    this.rts, this.adc, this.kil, this.rra, this.nop, this.adc, this.ror, this.rra, this.pla, this.adc, this.rora,this.arr, this.jmp, this.adc, this.ror, this.rra, //6x
+    this.bvs, this.adc, this.kil, this.rra, this.nop, this.adc, this.ror, this.rra, this.sei, this.adc, this.nop, this.rra, this.nop, this.adc, this.ror, this.rra, //7x
+    this.nop, this.sta, this.nop, this.sax, this.sty, this.sta, this.stx, this.sax, this.dey, this.nop, this.txa, this.uni, this.sty, this.sta, this.stx, this.sax, //8x
+    this.bcc, this.sta, this.kil, this.uni, this.sty, this.sta, this.stx, this.sax, this.tya, this.sta, this.txs, this.uni, this.uni, this.sta, this.uni, this.uni, //9x
+    this.ldy, this.lda, this.ldx, this.lax, this.ldy, this.lda, this.ldx, this.lax, this.tay, this.lda, this.tax, this.uni, this.ldy, this.lda, this.ldx, this.lax, //ax
+    this.bcs, this.lda, this.kil, this.lax, this.ldy, this.lda, this.ldx, this.lax, this.clv, this.lda, this.tsx, this.uni, this.ldy, this.lda, this.ldx, this.lax, //bx
+    this.cpy, this.cmp, this.nop, this.dcp, this.cpy, this.cmp, this.dec, this.dcp, this.iny, this.cmp, this.dex, this.axs, this.cpy, this.cmp, this.dec, this.dcp, //cx
+    this.bne, this.cmp, this.kil, this.dcp, this.nop, this.cmp, this.dec, this.dcp, this.cld, this.cmp, this.nop, this.dcp, this.nop, this.cmp, this.dec, this.dcp, //dx
+    this.cpx, this.sbc, this.nop, this.isc, this.cpx, this.sbc, this.inc, this.isc, this.inx, this.sbc, this.nop, this.sbc, this.cpx, this.sbc, this.inc, this.isc, //ex
+    this.beq, this.sbc, this.kil, this.isc, this.nop, this.sbc, this.inc, this.isc, this.sed, this.sbc, this.nop, this.isc, this.nop, this.sbc, this.inc, this.isc, //fx
     this.nmi, this.irq // 0x100: NMI, 0x101: IRQ
   ];
 
