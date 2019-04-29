@@ -43,6 +43,10 @@ mappers[1] = function(nes, rom, header) {
     this.ramEnable = 0;
   }
   this.reset(true);
+  this.saveVars = [
+    "name", "chrRam", "prgRam", "shiftReg", "shiftCount", "mirroring",
+    "prgMode", "chrMode", "chrBank0", "chrBank1", "prgBank", "ramEnable"
+  ];
 
   this.getRomAdr = function(adr) {
     switch(this.prgMode) {
@@ -109,8 +113,6 @@ mappers[1] = function(nes, rom, header) {
       return bank * 0x2000 + (adr & 0x1fff);
     }
   }
-
-  this.ppuLineEnd = function() {};
 
   this.read = function(adr) {
     if(adr < 0x6000) {

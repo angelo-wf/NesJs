@@ -24,6 +24,8 @@ Controllers 1 and 2 are emulated, with the following mapping:
 | B      | A               | T            |
 | A      | Z               | G            |
 
+Pressing M will make a save state, and pressing N will load it.
+
 Roms can be loaded from zip-files as well, which will load the first file with a .nes extension it can find.
 
 ## Usage
@@ -39,3 +41,5 @@ Commenting out `js/main.js`, and uncommenting the `js/nestest.nes.js`, `js/neste
 Thanks to the resources at [the nesdev wiki](http://wiki.nesdev.com/w/index.php/Nesdev_Wiki) and [the nesdev forums](https://forums.nesdev.com) for the test roms, documentation and some code snippets used for this.
 
 Uses the [zip.js](https://gildas-lormeau.github.io/zip.js/) library for zipped rom loading support.
+
+Licensed under the MIT License. See `LICENSE.txt` for details.

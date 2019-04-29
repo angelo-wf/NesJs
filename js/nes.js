@@ -12,6 +12,10 @@ function Nes() {
   // mapper / rom
   this.mapper;
 
+  // current controller state, changes externally
+  this.currentControl1State = 0;
+  this.currentControl2State = 0;
+
   this.reset = function(hard) {
     if(hard) {
       for(let i = 0; i < this.ram.length; i++) {
@@ -45,6 +49,11 @@ function Nes() {
     this.dmcIrqWanted = false;
   }
   this.reset(true);
+  this.saveVars = [
+    "ram", "cycles", "inDma", "dmaTimer", "dmaBase", "dmaValue",
+    "latchedControl1State", "latchedControl2State", "controllerLatched",
+    "mapperIrqWanted", "frameIrqWanted", "dmcIrqWanted"
+  ];
 
   this.loadRom = function(rom) {
     if(rom.length < 0x10) {
@@ -159,7 +168,61 @@ function Nes() {
   this.runFrame = function() {
     do {
       this.cycle()
-    } while(!(this.ppu.line === 0 && this.ppu.dot === 0));
+    } while(!(this.ppu.line === 240 && this.ppu.dot === 0));
+  }
+
+  this.getState = function() {
+    let cpuObj = this.getObjState(this.cpu);
+    let ppuObj = this.getObjState(this.ppu);
+    let apuObj = this.getObjState(this.apu);
+    let mapperObj = {};
+    if(this.mapper) {
+      mapperObj = this.getObjState(this.mapper);
+    }
+    let final = this.getObjState(this);
+    final["cpu"] = cpuObj;
+    final["ppu"] = ppuObj;
+    final["apu"] = apuObj;
+    final["mapper"] = mapperObj;
+    return final;
+  }
+
+  this.setState = function(obj) {
+    this.setObjState(this.cpu, obj.cpu);
+    this.setObjState(this.ppu, obj.ppu);
+    this.setObjState(this.apu, obj.apu);
+    if(this.mapper) {
+      this.setObjState(this.mapper, obj.mapper);
+    }
+    this.setObjState(this, obj);
+  }
+
+  this.getObjState = function(obj) {
+    let ret = {};
+    for(let i = 0; i < obj.saveVars.length; i++) {
+      let name = obj.saveVars[i];
+      let val = obj[name];
+      if(val instanceof Uint8Array || val instanceof Uint16Array) {
+        ret[name] = Array.prototype.slice.call(val);
+      } else {
+        ret[name] = val;
+      }
+    }
+    return ret;
+  }
+
+  this.setObjState = function(obj, save) {
+    for(let i = 0; i < obj.saveVars.length; i++) {
+      let name = obj.saveVars[i];
+      let val = obj[name];
+      if(val instanceof Uint8Array) {
+        obj[name] = new Uint8Array(save[name]);
+      } else if(val instanceof Uint16Array) {
+        obj[name] = new Uint16Array(save[name]);
+      } else {
+        obj[name] = save[name];
+      }
+    }
   }
 
   // cpu read

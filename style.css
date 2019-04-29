@@ -1,4 +1,9 @@
 
+body {
+  text-align: center;
+  background-color: #efefef;
+}
+
 pre {
   margin: 0;
   padding: 0;
@@ -9,6 +14,11 @@ pre {
   max-height: 200px;
   min-height: 200px;
   overflow: scroll;
+  text-align: left;
+  width: 512px;
+  margin: auto;
+  border: 1px solid #afafaf;
+  padding: 5px;
 }
 
 #output {

@@ -33,6 +33,9 @@ mappers[0] = function(nes, rom, header) {
     }
   }
   this.reset(true);
+  this.saveVars = [
+    "name", "chrRam", "prgRam"
+  ];
 
   this.getRomAdr = function(adr) {
     if(this.banks === 2) {
@@ -53,8 +56,6 @@ mappers[0] = function(nes, rom, header) {
   this.getChrAdr = function(adr) {
     return adr;
   }
-
-  this.ppuLineEnd = function() {};
 
   this.read = function(adr) {
     if(adr < 0x6000) {

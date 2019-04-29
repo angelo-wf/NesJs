@@ -5,6 +5,7 @@ let paused = false;
 let loaded = false;
 let pausedInBg = false;
 let loopId = 0;
+let saveState = undefined;
 
 let c = el("output");
 c.width = 256;
@@ -131,6 +132,7 @@ document.onvisibilitychange = function(e) {
 
 function loadRom(rom) {
   if(nes.loadRom(rom)) {
+    saveState = undefined;
     nes.reset(true);
     if(!loaded && !paused) {
       loopId = requestAnimationFrame(update);
@@ -189,5 +191,17 @@ window.onkeyup = function(e) {
   if(controlsP2[e.key.toLowerCase()]) {
     nes.currentControl2State &= (~controlsP2[e.key.toLowerCase()]) & 0xff;
     e.preventDefault();
+  }
+  if(e.key.toLowerCase() === "m" && loaded) {
+    saveState = nes.getState();
+    log("Saved state");
+  }
+  if(e.key.toLowerCase() === "n" && loaded) {
+    if(saveState) {
+      nes.setState(saveState);
+      log("Loaded state");
+    } else {
+      log("No state saved yet");
+    }
   }
 }

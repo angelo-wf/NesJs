@@ -85,6 +85,15 @@ function Ppu(nes) {
     this.spriteCount = 0;
   }
   this.reset();
+  this.saveVars = [
+    "ppuRam", "paletteRam", "oamRam", "secondaryOam", "spriteTiles", "t", "v",
+    "w", "x", "line", "dot", "evenFrame", "oamAddress", "readBuffer",
+    "spriteZero", "spriteOverflow", "inVblank", "vramIncrement",
+    "spritePatternBase", "bgPatternBase", "spriteHeight", "slave",
+    "generateNmi", "greyScale", "bgInLeft", "sprInLeft", "bgRendering",
+    "sprRendering", "emphasis", "atl", "atr", "tl", "th", "spriteZeroIn",
+    "spriteCount"
+  ];
 
   this.cycle = function() {
     if(this.line < 240) {
@@ -113,8 +122,6 @@ function Ppu(nes) {
         this.spriteZeroIn = false;
         this.spriteCount = 0;
         if(this.bgRendering || this.sprRendering) {
-          // notify mapper that we're at the end of the line (not accurate)
-          this.nes.mapper.ppuLineEnd();
           // do sprite evaluation and sprite tile fetching
           this.evaluateSprites();
         }
@@ -153,8 +160,9 @@ function Ppu(nes) {
         this.spriteZeroIn = false;
         this.spriteCount = 0;
         if(this.bgRendering || this.sprRendering) {
-          // notify mapper that we're at the end of the line (not accurate)
-          this.nes.mapper.ppuLineEnd();
+          // garbage sprite fetch
+          let base = this.spriteHeight === 16 ? 0x1000 : this.spritePatternBase;
+          this.readInternal(base + 0xfff);
         }
       } else if(this.dot === 280) {
         if(this.bgRendering || this.sprRendering) {
@@ -225,7 +233,11 @@ function Ppu(nes) {
         }
       }
     }
-
+    if(this.spriteCount < 8) {
+      // garbage fetch if not all slots were filled
+      let base = this.spriteHeight === 16 ? 0x1000 : this.spritePatternBase;
+      this.readInternal(base + 0xfff);
+    }
   }
 
   this.readTileBuffers = function() {

@@ -56,6 +56,10 @@ function Cpu(mem) {
     this.cyclesLeft = 7;
   }
   this.reset();
+  this.saveVars = [
+    "r", "br", "n", "v", "d", "i", "z", "c", "irqWanted", "nmiWanted",
+    "cyclesLeft"
+  ];
 
   // instruction maps
 

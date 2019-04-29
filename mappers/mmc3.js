@@ -45,8 +45,15 @@ mappers[4] = function(nes, rom, header) {
     this.irqLatch = 0;
     this.irqEnabled = false;
     this.irqCounter = 0;
+
+    this.lastRead = 0;
   }
   this.reset(true);
+  this.saveVars = [
+    "name", "chrRam", "prgRam", "bankRegs", "mirroring", "prgMode", "chrMode",
+    "regSelect", "reloadIrq", "irqLatch", "irqEnabled", "irqCounter",
+    "lastRead"
+  ];
 
   this.getRomAdr = function(adr) {
     let bank0 = this.bankRegs[6] & ((this.banks * 2) - 1);
@@ -113,7 +120,7 @@ mappers[4] = function(nes, rom, header) {
     }
   }
 
-  this.ppuLineEnd = function() {
+  this.clockIrq = function() {
     if(this.irqCounter === 0 || this.reloadIrq) {
       this.irqCounter = this.irqLatch;
       this.reloadIrq = false;
@@ -186,6 +193,11 @@ mappers[4] = function(nes, rom, header) {
   // return if this read had to come from internal and which address
   // or else the value itself
   this.ppuRead = function(adr) {
+    if((this.lastRead & 0x1000) === 0 && (adr & 0x1000) > 0) {
+      // A12 went high, clock irq
+      this.clockIrq();
+    }
+    this.lastRead = adr;
     if(adr < 0x2000) {
       if(this.chrBanks === 0) {
         return [true, this.chrRam[this.getChrAdr(adr)]];

@@ -137,6 +137,27 @@ function Apu(nes) {
 
   }
   this.reset();
+  this.saveVars = [
+    "frameCounter", "interruptInhibit", "step5Mode", "enableNoise",
+    "enableTriangle", "enablePulse2", "enablePulse1", "p1Timer", "p1TimerValue",
+    "p1Duty", "p1DutyIndex", "p1Output", "p1CounterHalt", "p1Counter",
+    "p1Volume", "p1ConstantVolume", "p1Decay", "p1EnvelopeCounter",
+    "p1EnvelopeStart", "p1SweepEnabled", "p1SweepPeriod", "p1SweepNegate",
+    "p1SweepShift", "p1SweepTimer", "p1SweepTarget", "p1SweepMuting",
+    "p1SweepReload", "p2Timer", "p2TimerValue", "p2Duty", "p2DutyIndex",
+    "p2Output", "p2CounterHalt", "p2Counter", "p2Volume", "p2ConstantVolume",
+    "p2Decay", "p2EnvelopeCounter", "p2EnvelopeStart", "p2SweepEnabled",
+    "p2SweepPeriod", "p2SweepNegate", "p2SweepShift", "p2SweepTimer",
+    "p2SweepTarget", "p2SweepMuting", "p2SweepReload", "triTimer",
+    "triTimerValue", "triStepIndex", "triOutput", "triCounterHalt",
+    "triCounter", "triLinearCounter", "triReloadLinear", "triLinearReload",
+    "noiseTimer", "noiseTimerValue", "noiseShift", "noiseTonal", "noiseOutput",
+    "noiseCounterHalt", "noiseCounter", "noiseVolume", "noiseConstantVolume",
+    "noiseDecay", "noiseEnvelopeCounter", "noiseEnvelopeStart", "dmcInterrupt",
+    "dmcLoop", "dmcTimer", "dmcTimerValue", "dmcOutput", "dmcSampleAddress",
+    "dmcAddress", "dmcSample", "dmcSampleLength", "dmcSampleEmpty",
+    "dmcBytesLeft", "dmcShifter", "dmcBitsLeft", "dmcSilent"
+  ];
 
   this.cycle = function() {
     if(
