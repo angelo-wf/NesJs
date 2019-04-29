@@ -3,6 +3,8 @@ let nes = new Nes();
 let audioHandler = new AudioHandler();
 let paused = false;
 let loaded = false;
+let pausedInBg = false;
+let loopId = 0;
 
 let c = el("output");
 c.width = 256;
@@ -86,11 +88,12 @@ el("rom").onchange = function(e) {
 
 el("pause").onclick = function(e) {
   if(paused && loaded) {
-    requestAnimationFrame(update);
+    loopId = requestAnimationFrame(update);
     audioHandler.start();
     paused = false;
     el("pause").innerText = "Pause";
   } else {
+    cancelAnimationFrame(loopId);
     audioHandler.stop();
     paused = true;
     el("pause").innerText = "Continue";
@@ -111,11 +114,26 @@ el("runframe").onclick = function(e) {
   }
 }
 
+document.onvisibilitychange = function(e) {
+  if(document.hidden) {
+    pausedInBg = false;
+    if(!paused && loaded) {
+      el("pause").click();
+      pausedInBg = true;
+    }
+  } else {
+    if(pausedInBg && loaded) {
+      el("pause").click();
+      pausedInBg = false;
+    }
+  }
+}
+
 function loadRom(rom) {
   if(nes.loadRom(rom)) {
     nes.reset(true);
     if(!loaded && !paused) {
-      requestAnimationFrame(update);
+      loopId = requestAnimationFrame(update);
       audioHandler.start();
     }
     loaded = true;
@@ -124,9 +142,7 @@ function loadRom(rom) {
 
 function update() {
   runFrame();
-  if(!paused) {
-    requestAnimationFrame(update);
-  }
+  loopId = requestAnimationFrame(update);
 }
 
 function runFrame() {
