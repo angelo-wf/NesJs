@@ -198,8 +198,11 @@ window.onkeyup = function(e) {
   }
   if(e.key.toLowerCase() === "n" && loaded) {
     if(saveState) {
-      nes.setState(saveState);
-      log("Loaded state");
+      if(nes.setState(saveState)) {
+        log("Loaded state");
+      } else {
+        log("Failed to load state");
+      }
     } else {
       log("No state saved yet");
     }

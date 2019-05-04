@@ -188,13 +188,18 @@ function Nes() {
   }
 
   this.setState = function(obj) {
+    if(this.mapper === undefined || obj.mapper.name === undefined) {
+      return false;
+    }
+    if(this.mapper.name !== obj.mapper.name) {
+      return false;
+    }
     this.setObjState(this.cpu, obj.cpu);
     this.setObjState(this.ppu, obj.ppu);
     this.setObjState(this.apu, obj.apu);
-    if(this.mapper) {
-      this.setObjState(this.mapper, obj.mapper);
-    }
+    this.setObjState(this.mapper, obj.mapper);
     this.setObjState(this, obj);
+    return true;
   }
 
   this.getObjState = function(obj) {

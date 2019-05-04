@@ -193,12 +193,14 @@ mappers[4] = function(nes, rom, header) {
   // return if this read had to come from internal and which address
   // or else the value itself
   this.ppuRead = function(adr) {
-    if((this.lastRead & 0x1000) === 0 && (adr & 0x1000) > 0) {
-      // A12 went high, clock irq
-      this.clockIrq();
-    }
-    this.lastRead = adr;
     if(adr < 0x2000) {
+      // clocking irq only happens for chr-fetches?
+      // otherwise Mega Man 3's in-level menu breaks
+      if((this.lastRead & 0x1000) === 0 && (adr & 0x1000) > 0) {
+        // A12 went high, clock irq
+        this.clockIrq();
+      }
+      this.lastRead = adr;
       if(this.chrBanks === 0) {
         return [true, this.chrRam[this.getChrAdr(adr)]];
       } else {

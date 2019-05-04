@@ -564,10 +564,10 @@ function Apu(nes) {
         this.triCounterHalt = (value & 0x80) > 0;
         this.triLinearReload = value & 0x7f;
 
-        // looks like this is a mistake in the nesdev wiki
+        // looks like this is a mistake in the nesdev wiki?
         // http://forums.nesdev.com/viewtopic.php?f=3&t=13767#p163155
         // doesn't do this, neither does Mesen,
-        // and doing it breaks SMB2's triangle between notes
+        // and doing it breaks Super Mario Bros. 2's triangle between notes
 
         // this.triReloadLinear = true;
         break;
