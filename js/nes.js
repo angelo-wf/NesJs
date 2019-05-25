@@ -104,19 +104,22 @@ function Nes() {
 
   this.getSamples = function(data) {
     // apu returns 29780 or 29781 samples (0 - 1) for a frame
-    // we need 735 values (-1 - 1)
-    // get one every 40.5
+    // we need 735 values (0 - 1)
     let samples = this.apu.getOutput();
+    let runAdd = (29780 / 735);
     let total = 0;
     let inputPos = 0;
+    let running = 0;
     for(let i = 0; i < 735; i++) {
+      running += runAdd;
       let total = 0;
-      let avgCount = (i & 1) === 0 ? 40 : 41;
+      let avgCount = running & 0xffff;
       for(let j = inputPos; j < inputPos + avgCount; j++) {
         total += samples[1][j];
       }
       data[i] = total / avgCount;
       inputPos += avgCount;
+      running -= avgCount;
     }
   }
 

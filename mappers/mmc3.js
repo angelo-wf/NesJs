@@ -196,6 +196,10 @@ mappers[4] = function(nes, rom, header) {
     if(adr < 0x2000) {
       // clocking irq only happens for chr-fetches?
       // otherwise Mega Man 3's in-level menu breaks
+
+      // A12 should be ignored for 8 cycles after going high?
+      // see https://forums.nesdev.com/viewtopic.php?f=3&t=17290#p217456
+      // ignore for nametables, for now
       if((this.lastRead & 0x1000) === 0 && (adr & 0x1000) > 0) {
         // A12 went high, clock irq
         this.clockIrq();
