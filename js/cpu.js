@@ -312,7 +312,7 @@ function Cpu(mem) {
 
   this.adc = function(adr) {
     // adds the value + C to A, set C, V, Z and N
-    let value = mem.read(adr);
+    let value = this.mem.read(adr);
     let result = this.r[A] + value + (this.c ? 1 : 0);
     this.c = result > 0xff;
     this.v = (
@@ -325,7 +325,7 @@ function Cpu(mem) {
 
   this.sbc = function(adr) {
     // subtracts the value + !C from A, set C, V, Z and N
-    let value = mem.read(adr) ^ 0xff;
+    let value = this.mem.read(adr) ^ 0xff;
     let result = this.r[A] + value + (this.c ? 1 : 0);
     this.c = result > 0xff;
     this.v = (
@@ -338,7 +338,7 @@ function Cpu(mem) {
 
   this.cmp = function(adr) {
     // sets C, Z and N according to what A - value would do
-    let value = mem.read(adr) ^ 0xff;
+    let value = this.mem.read(adr) ^ 0xff;
     let result = this.r[A] + value + 1;
     this.c = result > 0xff;
     this.setZandN(result & 0xff);
@@ -346,7 +346,7 @@ function Cpu(mem) {
 
   this.cpx = function(adr) {
     // sets C, Z and N according to what X - value would do
-    let value = mem.read(adr) ^ 0xff;
+    let value = this.mem.read(adr) ^ 0xff;
     let result = this.r[X] + value + 1;
     this.c = result > 0xff;
     this.setZandN(result & 0xff);
@@ -354,7 +354,7 @@ function Cpu(mem) {
 
   this.cpy = function(adr) {
     // sets C, Z and N according to what Y - value would do
-    let value = mem.read(adr) ^ 0xff;
+    let value = this.mem.read(adr) ^ 0xff;
     let result = this.r[Y] + value + 1;
     this.c = result > 0xff;
     this.setZandN(result & 0xff);
