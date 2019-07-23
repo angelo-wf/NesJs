@@ -302,4 +302,41 @@ function Nes() {
     }
     this.mapper.write(adr, value);
   }
+
+  // print bytes and words nicely
+  this.getByteRep = function(val) {
+    return ("0" + val.toString(16)).slice(-2).toUpperCase();
+  }
+
+  this.getWordRep = function(val) {
+    return ("000" + val.toString(16)).slice(-4).toUpperCase();
+  }
+
+  // get controls in
+  this.setButtonPressed = function(player, button) {
+    if(player === 1) {
+      this.currentControl1State |= (1 << button);
+    } else if(player === 2) {
+      this.currentControl2State |= (1 << button);
+    }
+  }
+
+  this.setButtonReleased = function(player, button) {
+    if(player === 1) {
+      this.currentControl1State &= (~(1 << button)) & 0xff;
+    } else if(player === 2) {
+      this.currentControl2State &= (~(1 << button)) & 0xff;
+    }
+  }
+
+  this.INPUT = {
+    A: 0,
+    B: 1,
+    SELECT: 2,
+    START: 3,
+    UP: 4,
+    DOWN: 5,
+    LEFT: 6,
+    RIGHT: 7
+  }
 }

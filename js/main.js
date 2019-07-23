@@ -14,24 +14,24 @@ let ctx = c.getContext("2d");
 let imgData = ctx.createImageData(256, 240);
 
 let controlsP1 = {
-  arrowright: 0x80, // right
-  arrowleft: 0x40, // left
-  arrowdown: 0x20, // down
-  arrowup: 0x10, // up
-  enter: 0x08, // start
-  shift: 0x04, // select
-  a: 0x02, // b
-  z: 0x01 // a
+  arrowright: nes.INPUT.RIGHT,
+  arrowleft: nes.INPUT.LEFT,
+  arrowdown: nes.INPUT.DOWN,
+  arrowup: nes.INPUT.UP,
+  enter: nes.INPUT.START,
+  shift: nes.INPUT.SELECT,
+  a: nes.INPUT.B,
+  z: nes.INPUT.A
 }
 let controlsP2 = {
-  l: 0x80, // right
-  j: 0x40, // left
-  k: 0x20, // down
-  i: 0x10, // up
-  p: 0x08, // start
-  o: 0x04, // select
-  t: 0x02, // b
-  g: 0x01 // a
+  l: nes.INPUT.RIGHT,
+  j: nes.INPUT.LEFT,
+  k: nes.INPUT.DOWN,
+  i: nes.INPUT.UP,
+  p: nes.INPUT.START,
+  o: nes.INPUT.SELECT,
+  t: nes.INPUT.B,
+  g: nes.INPUT.A
 }
 
 zip.workerScriptsPath = "lib/";
@@ -160,36 +160,28 @@ function log(text) {
   el("log").scrollTop = el("log").scrollHeight;
 }
 
-function getByteRep(val) {
-  return ("0" + val.toString(16)).slice(-2).toUpperCase();
-}
-
-function getWordRep(val) {
-  return ("000" + val.toString(16)).slice(-4).toUpperCase();
-}
-
 function el(id) {
   return document.getElementById(id);
 }
 
 window.onkeydown = function(e) {
-  if(controlsP1[e.key.toLowerCase()]) {
-    nes.currentControl1State |= controlsP1[e.key.toLowerCase()];
+  if(controlsP1[e.key.toLowerCase()] !== undefined) {
+    nes.setButtonPressed(1, controlsP1[e.key.toLowerCase()]);
     e.preventDefault();
   }
-  if(controlsP2[e.key.toLowerCase()]) {
-    nes.currentControl2State |= controlsP2[e.key.toLowerCase()];
+  if(controlsP2[e.key.toLowerCase()] !== undefined) {
+    nes.setButtonPressed(2, controlsP2[e.key.toLowerCase()]);
     e.preventDefault();
   }
 }
 
 window.onkeyup = function(e) {
-  if(controlsP1[e.key.toLowerCase()]) {
-    nes.currentControl1State &= (~controlsP1[e.key.toLowerCase()]) & 0xff;
+  if(controlsP1[e.key.toLowerCase()] !== undefined) {
+    nes.setButtonReleased(1, controlsP1[e.key.toLowerCase()]);
     e.preventDefault();
   }
-  if(controlsP2[e.key.toLowerCase()]) {
-    nes.currentControl2State &= (~controlsP2[e.key.toLowerCase()]) & 0xff;
+  if(controlsP2[e.key.toLowerCase()] !== undefined) {
+    nes.setButtonReleased(2, controlsP2[e.key.toLowerCase()]);
     e.preventDefault();
   }
   if(e.key.toLowerCase() === "m" && loaded) {
