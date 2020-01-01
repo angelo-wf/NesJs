@@ -124,6 +124,33 @@ if(nes.setBattery(battery)) {
 }
 ```
 
+## Known broken games
+
+These are games that are known to crash/freeze. Games with only (minor) graphical problems are not listed.
+Almost all of those cases (and most of these cases as well) come down to the emulator not being cycle accurate.
+
+- Battletoads
+  - Freezes when starting stage 2
+- Battletoads and Double Dragon
+  - Freezes semi-randomly during stage 1
+- Adventure of Lolo 3 (USA)
+  - Freezes when entering level 1
+- Adventure of Lolo 2 (USA) / Adventure of Lolo (J)
+  - Freezes after HAI / copyright-screen
+- Super Mario Bros. + Duck Hunt + World Class Track Meet
+  - Freezes after selecting game
+- Super Mario Bros. + Duck Hunt + Nintendo World Cup
+  - Freezes on boot (grey screen)
+- MS. Pac-Man (Tengen)
+  - Freezes on boot (grey screen)
+- Bill & Ted's Excellent Adventure
+  - Freezes on boot (grey screen)
+- Huge Insect
+  - Freezes on boot (grey screen)
+- Vegas Dream
+  - Freezes on boot (screen filled with single repeating tile)
+
+
 ## Credits
 
 Thanks to the resources at [the nesdev wiki](http://wiki.nesdev.com/w/index.php/Nesdev_Wiki) and [the nesdev forums](https://forums.nesdev.com) for the test roms, documentation and some code snippets used for this.

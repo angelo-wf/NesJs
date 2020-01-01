@@ -82,7 +82,7 @@ function Ppu(nes) {
   }
   this.reset();
   this.saveVars = [
-    "ppuRam", "paletteRam", "oamRam", "secondaryOam", "spriteTiles", "t", "v",
+    "paletteRam", "oamRam", "secondaryOam", "spriteTiles", "t", "v",
     "w", "x", "line", "dot", "evenFrame", "oamAddress", "readBuffer",
     "spriteZero", "spriteOverflow", "inVblank", "vramIncrement",
     "spritePatternBase", "bgPatternBase", "spriteHeight", "slave",
