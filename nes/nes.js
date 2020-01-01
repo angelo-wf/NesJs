@@ -1,6 +1,8 @@
 
 function Nes() {
 
+  // state version, for savestates
+  this.stateVersion = 1;
   // ram
   this.ram = new Uint8Array(0x800);
   // cpu
@@ -68,6 +70,10 @@ function Nes() {
       return false;
     }
     let header = this.parseHeader(rom);
+    if(rom.length < header.chrBase + 0x2000 * header.chrBanks) {
+      log("Rom file is missing data");
+      return false;
+    }
     if(mappers[header.mapper] === undefined) {
       log("Unsupported mapper: " + header.mapper);
       return false;
@@ -80,14 +86,14 @@ function Nes() {
       }
     }
     log(
-      "Loaded " + this.mapper.name + " rom: " + this.mapper.banks +
-      " PRG bank(s), " + this.mapper.chrBanks + " CHR bank(s)"
+      "Loaded " + this.mapper.name + " rom: " + this.mapper.h.banks +
+      " PRG bank(s), " + this.mapper.h.chrBanks + " CHR bank(s)"
     );
     return true;
   }
 
   this.parseHeader = function(rom) {
-    return {
+    let o = {
       banks: rom[4],
       chrBanks: rom[5],
       mapper: (rom[6] >> 4) | (rom[7] & 0xf0),
@@ -96,21 +102,30 @@ function Nes() {
       trainer: (rom[6] & 0x04) > 0,
       fourScreen: (rom[6] & 0x08) > 0,
     };
+    o["base"] = 16 + (o.trainer ? 512 : 0);
+    o["chrBase"] = o.base + 0x4000 * o.banks;
+    o["prgAnd"] = (o.banks * 0x4000) - 1;
+    o["chrAnd"] = o.chrBanks === 0 ? 0x1fff : (o.chrBanks * 0x2000) - 1;
+    o["saveVars"] = [
+      "banks", "chrBanks", "mapper", "verticalMirroring", "battery", "trainer",
+      "fourScreen"
+    ];
+    return o;
   }
 
   this.getPixels = function(data) {
     this.ppu.setFrame(data);
   }
 
-  this.getSamples = function(data) {
+  this.getSamples = function(data, count) {
     // apu returns 29780 or 29781 samples (0 - 1) for a frame
-    // we need 735 values (0 - 1)
+    // we need count values (0 - 1)
     let samples = this.apu.getOutput();
-    let runAdd = (29780 / 735);
+    let runAdd = (29780 / count);
     let total = 0;
     let inputPos = 0;
     let running = 0;
-    for(let i = 0; i < 735; i++) {
+    for(let i = 0; i < count; i++) {
       running += runAdd;
       let total = 0;
       let avgCount = running & 0xffff;
@@ -172,65 +187,6 @@ function Nes() {
     do {
       this.cycle()
     } while(!(this.ppu.line === 240 && this.ppu.dot === 0));
-  }
-
-  this.getState = function() {
-    let cpuObj = this.getObjState(this.cpu);
-    let ppuObj = this.getObjState(this.ppu);
-    let apuObj = this.getObjState(this.apu);
-    let mapperObj = {};
-    if(this.mapper) {
-      mapperObj = this.getObjState(this.mapper);
-    }
-    let final = this.getObjState(this);
-    final["cpu"] = cpuObj;
-    final["ppu"] = ppuObj;
-    final["apu"] = apuObj;
-    final["mapper"] = mapperObj;
-    return final;
-  }
-
-  this.setState = function(obj) {
-    if(this.mapper === undefined || obj.mapper.name === undefined) {
-      return false;
-    }
-    if(this.mapper.name !== obj.mapper.name) {
-      return false;
-    }
-    this.setObjState(this.cpu, obj.cpu);
-    this.setObjState(this.ppu, obj.ppu);
-    this.setObjState(this.apu, obj.apu);
-    this.setObjState(this.mapper, obj.mapper);
-    this.setObjState(this, obj);
-    return true;
-  }
-
-  this.getObjState = function(obj) {
-    let ret = {};
-    for(let i = 0; i < obj.saveVars.length; i++) {
-      let name = obj.saveVars[i];
-      let val = obj[name];
-      if(val instanceof Uint8Array || val instanceof Uint16Array) {
-        ret[name] = Array.prototype.slice.call(val);
-      } else {
-        ret[name] = val;
-      }
-    }
-    return ret;
-  }
-
-  this.setObjState = function(obj, save) {
-    for(let i = 0; i < obj.saveVars.length; i++) {
-      let name = obj.saveVars[i];
-      let val = obj[name];
-      if(val instanceof Uint8Array) {
-        obj[name] = new Uint8Array(save[name]);
-      } else if(val instanceof Uint16Array) {
-        obj[name] = new Uint16Array(save[name]);
-      } else {
-        obj[name] = save[name];
-      }
-    }
   }
 
   // cpu read
@@ -338,5 +294,91 @@ function Nes() {
     DOWN: 5,
     LEFT: 6,
     RIGHT: 7
+  }
+
+  // save states, battery saves
+  this.getBattery = function() {
+    if(this.mapper.h.battery) {
+      return this.mapper.getBattery();
+    }
+    return undefined;
+  }
+
+  this.setBattery = function(data) {
+    if(this.mapper.h.battery) {
+      return this.mapper.setBattery(data);
+    }
+    return true;
+  }
+
+  this.getState = function() {
+    let cpuObj = this.getObjState(this.cpu);
+    let ppuObj = this.getObjState(this.ppu);
+    let apuObj = this.getObjState(this.apu);
+    let mapperObj = this.getObjState(this.mapper);
+    let headerObj = this.getObjState(this.mapper.h);
+    let final = this.getObjState(this);
+    final["cpu"] = cpuObj;
+    final["ppu"] = ppuObj;
+    final["apu"] = apuObj;
+    final["mapper"] = mapperObj;
+    final["header"] = headerObj;
+    final["mapperVersion"] = this.mapper.version;
+    final["version"] = this.stateVersion;
+    return final;
+  }
+
+  this.setState = function(obj) {
+    if(obj.version !== this.stateVersion || obj.mapperVersion !== this.mapper.version) {
+      return false;
+    }
+    // check header
+    if(!this.checkObjState(this.mapper.h, obj.header)) {
+      return false;
+    }
+    this.setObjState(this.cpu, obj.cpu);
+    this.setObjState(this.ppu, obj.ppu);
+    this.setObjState(this.apu, obj.apu);
+    this.setObjState(this.mapper, obj.mapper);
+    this.setObjState(this, obj);
+    return true;
+  }
+
+  this.getObjState = function(obj) {
+    let ret = {};
+    for(let i = 0; i < obj.saveVars.length; i++) {
+      let name = obj.saveVars[i];
+      let val = obj[name];
+      if(val instanceof Uint8Array || val instanceof Uint16Array) {
+        ret[name] = Array.prototype.slice.call(val);
+      } else {
+        ret[name] = val;
+      }
+    }
+    return ret;
+  }
+
+  this.setObjState = function(obj, save) {
+    for(let i = 0; i < obj.saveVars.length; i++) {
+      let name = obj.saveVars[i];
+      let val = obj[name];
+      if(val instanceof Uint8Array) {
+        obj[name] = new Uint8Array(save[name]);
+      } else if(val instanceof Uint16Array) {
+        obj[name] = new Uint16Array(save[name]);
+      } else {
+        obj[name] = save[name];
+      }
+    }
+  }
+
+  this.checkObjState = function(obj, save) {
+    for(let i = 0; i < obj.saveVars.length; i++) {
+      let name = obj.saveVars[i];
+      if(obj[name] !== save[name]) {
+        return false;
+      }
+    }
+    return true;
   }
 }

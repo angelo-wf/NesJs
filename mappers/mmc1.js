@@ -1,23 +1,17 @@
 
 mappers[1] = function(nes, rom, header) {
   this.name = "MMC1";
+  this.version = 1;
 
   this.nes = nes;
 
   this.rom = rom;
 
-  this.banks = header.banks;
-  this.chrBanks = header.chrBanks;
-  this.base = 0x10 + (header.trainer ? 512 : 0);
-
-  let neededLength = this.base + 0x4000 * this.banks + 0x2000 * this.chrBanks;
-  if(this.rom.length < neededLength) {
-    throw new Error("rom is not complete");
-  }
+  this.h = header;
 
   this.chrRam = new Uint8Array(0x2000);
-
   this.prgRam = new Uint8Array(0x2000);
+  this.ppuRam = new Uint8Array(0x800);
 
   this.reset = function(hard) {
     if(hard) {
@@ -25,9 +19,15 @@ mappers[1] = function(nes, rom, header) {
       for(let i = 0; i < this.chrRam.length; i++) {
         this.chrRam[i] = 0;
       }
-      // clear prg ram
-      for(let i = 0; i < this.prgRam.length; i++) {
-        this.prgRam[i] = 0;
+      // clear prg ram, only if not battery backed
+      if(!this.h.battery) {
+        for(let i = 0; i < this.prgRam.length; i++) {
+          this.prgRam[i] = 0;
+        }
+      }
+      // clear ppu ram
+      for(let i = 0; i < this.ppuRam.length; i++) {
+        this.ppuRam[i] = 0;
       }
     }
 
@@ -44,34 +44,45 @@ mappers[1] = function(nes, rom, header) {
   }
   this.reset(true);
   this.saveVars = [
-    "name", "chrRam", "prgRam", "shiftReg", "shiftCount", "mirroring",
+    "name", "chrRam", "prgRam", "ppuRam", "shiftReg", "shiftCount", "mirroring",
     "prgMode", "chrMode", "chrBank0", "chrBank1", "prgBank", "ramEnable"
   ];
 
+  this.getBattery = function() {
+    return Array.prototype.slice.call(this.prgRam);
+  }
+
+  this.setBattery = function(data) {
+    if(data.length !== 0x2000) {
+      return false;
+    }
+    this.prgRam = new Uint8Array(data);
+    return true;
+  }
+
   this.getRomAdr = function(adr) {
+    let final = 0;
     switch(this.prgMode) {
       case 0:
       case 1: {
-        let bank = (this.prgBank & (this.banks - 1)) >> 1;
-        return 0x8000 * bank + (adr & 0x7fff);
+        final = 0x8000 * (this.prgBank >> 1) + (adr & 0x7fff);
       }
       case 2: {
-        let bank = this.prgBank & (this.banks - 1);
         if(adr < 0xc000) {
-          return adr & 0x3fff;
+          final = adr & 0x3fff;
         } else {
-          return bank * 0x4000 + (adr & 0x3fff);
+          final = this.prgBank * 0x4000 + (adr & 0x3fff);
         }
       }
       case 3: {
-        let bank = this.prgBank & (this.banks - 1);
         if(adr < 0xc000) {
-          return bank * 0x4000 + (adr & 0x3fff);
+          final = this.prgBank * 0x4000 + (adr & 0x3fff);
         } else {
-          return (this.banks - 1) * 0x4000 + (adr & 0x3fff);
+          final = (this.h.banks - 1) * 0x4000 + (adr & 0x3fff);
         }
       }
     }
+    return final & this.h.prgAnd;
   }
 
   this.getMirroringAdr = function(adr) {
@@ -96,22 +107,17 @@ mappers[1] = function(nes, rom, header) {
   }
 
   this.getChrAdr = function(adr) {
-    let bankCount = this.chrBanks * 2;
-    if(bankCount === 0) {
-      bankCount = 2;
-    }
+    let final = 0;
     if(this.chrMode === 1) {
-      let bank0 = this.chrBank0 & (bankCount - 1);
-      let bank1 = this.chrBank1 & (bankCount - 1);
       if(adr < 0x1000) {
-        return bank0 * 0x1000 + (adr & 0xfff);
+        final = this.chrBank0 * 0x1000 + (adr & 0xfff);
       } else {
-        return bank1 * 0x1000 + (adr & 0xfff);
+        final = this.chrBank1 * 0x1000 + (adr & 0xfff);
       }
     } else {
-      let bank = (this.chrBank0 & (bankCount - 1)) >> 1;
-      return bank * 0x2000 + (adr & 0x1fff);
+      final = (this.chrBank0 >> 1) * 0x2000 + (adr & 0x1fff);
     }
+    return final & this.h.chrAnd;
   }
 
   this.read = function(adr) {
@@ -124,7 +130,7 @@ mappers[1] = function(nes, rom, header) {
       }
       return this.prgRam[adr & 0x1fff];
     }
-    return this.rom[this.base + this.getRomAdr(adr)];
+    return this.rom[this.h.base + this.getRomAdr(adr)];
   }
 
   this.write = function(adr, value) {
@@ -172,35 +178,31 @@ mappers[1] = function(nes, rom, header) {
     }
   }
 
-  // return if this read had to come from internal and which address
-  // or else the value itself
+  // ppu-read
   this.ppuRead = function(adr) {
     if(adr < 0x2000) {
-      if(this.chrBanks === 0) {
-        return [true, this.chrRam[this.getChrAdr(adr)]];
+      if(this.h.chrBanks === 0) {
+        return this.chrRam[this.getChrAdr(adr)];
       } else {
-        return [true, this.rom[
-          this.base + 0x4000 * this.banks + this.getChrAdr(adr)
-        ]];
+        return this.rom[this.h.chrBase + this.getChrAdr(adr)];
       }
     } else {
-      return [false, this.getMirroringAdr(adr)];
+      return this.ppuRam[this.getMirroringAdr(adr)];
     }
   }
 
-  // return if this write had to go to internal and which address
-  // or else only that the write happened
+  // ppu-write
   this.ppuWrite = function(adr, value) {
     if(adr < 0x2000) {
-      if(this.chrBanks === 0) {
+      if(this.h.chrBanks === 0) {
         this.chrRam[this.getChrAdr(adr)] = value;
-        return [true, 0];
+        return;
       } else {
         // not writable
-        return [true, 0];
+        return;
       }
     } else {
-      return [false, this.getMirroringAdr(adr)];
+      return this.ppuRam[this.getMirroringAdr(adr)] = value;
     }
   }
 

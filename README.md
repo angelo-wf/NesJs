@@ -11,7 +11,7 @@ Standard controllers 1 and 2 are emulated.
 
 Supports mapper 0 (NROM), 1 (MMC1), 2 (UxROM), 3 (CNROM), 4 (MMC3) and 7 (AxROM). The MMC3's IRQ emulation is not really accurate though.
 
-There is no special handling for games with battery-saves.
+There is support for both save states and battery saves (the demo does not yet handle battery saves, though).
 
 ## Demo
 
@@ -37,6 +37,8 @@ Controllers 1 and 2 are emulated, with the following mapping:
 Pressing M will make a save state, and pressing N will load it.
 
 Roms can be loaded from zip-files as well, which will load the first file with a .nes extension it can find.
+
+The demo does not yet handle battery saves.
 
 ## Usage
 
@@ -66,43 +68,59 @@ Then, to use it:
 
 ```javascript
 // create a nes object
-let nes = new Nes()
+let nes = new Nes();
 
 // load a rom (rom as an Uint8Array)
 if(nes.loadRom(rom)) {
   // after loading, do a hard reset
-  nes.reset(true)
+  nes.reset(true);
   // rom is now loaded
 } else {
   // rom load failed
 }
 
 // run a frame (should be called 60 times per second)
-nes.runFrame()
+nes.runFrame();
 
 // get the image output
 // data should be an Uint8Array with 256*240*4 values, 4 for each pixel (r, g, b, a), as in the data for a canvas-2d-context imageData object
-nes.getPixels(data)
+nes.getPixels(data);
+// for example:
+// once
+let ctx = canvas.getContext("2d");
+let imgData = ctx.createImageData(256, 240);
+// every frame
+nes.getPixels(imgData.data);
+ctx.putImageData(imgData, 0, 0);
 
 // get the sound output
-// audioData should be an Float64Array with 735 values, as in the amount of samples per frame needed for 44.1 KHz (mono) audio
-nes.getSamples(audioData)
+// audioData should be an Float64Array, and will be filled with the amount of samples specified (usually the sample rate divided by 60)
+nes.getSamples(audioData, 44100 / 60);
+// see js/audio.js for a example on how this can be played.
+// the basic idea is to use an ScriptProcessorNode, fill a buffer (audioData above) with the samples and write it to a ring-buffer each frame, and have the ScriptProcessorNode's callback read from the ring-buffer, making sure that the read-position is always behind the write-position
 
 // set controller state
-nes.setButtonPressed(1, nes.INPUT.B) // player 1 is now pressing the B button
-nes.setButtonPressed(2, nes.INPUT.SELECT) // player 2 is now pressing the select button
-nes.setButtonReleased(1, nes.INPUT.B) // player 1 released B
-nes.setButtonReleased(2, nes.INPUT.SELECT) // now no buttons are pressed anymore
+nes.setButtonPressed(1, nes.INPUT.B); // player 1 is now pressing the B button
+nes.setButtonPressed(2, nes.INPUT.SELECT); // player 2 is now pressing the select button
+nes.setButtonReleased(1, nes.INPUT.B); // player 1 released B
+nes.setButtonReleased(2, nes.INPUT.SELECT); // now no buttons are pressed anymore
 // nes.INPUT contains A, B, SELECT, START, UP, DOWN, LEFT and RIGHT
 
-// other functions
-nes.reset() // soft reset (as in the reset button being pressed)
-nes.reset(true) // hard reset (as in the NES being turned off and on again)
-let state = nes.getState() // get the full state as an object
+// other functions (only call if a rom is loaded)
+nes.reset(); // soft reset (as in the reset button being pressed)
+nes.reset(true); // hard reset (as in the NES being turned off and on again)
+let state = nes.getState(); // get the full state as an object
 if(nes.setState(state)) {
   // the state-object has been loaded
 } else {
   // failed to load the state-object
+}
+let battery = nes.getBattery(); // get the battery-backed ram, or undefined if the loaded rom does not have battery-backed ram
+if(nes.setBattery(battery)) {
+  // loaded battery data
+  // (trying to load battery for a rom without battery-backed ram is also deemed successful)
+} else {
+  // failed to load battery data
 }
 ```
 

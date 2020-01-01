@@ -1,23 +1,17 @@
 
 mappers[4] = function(nes, rom, header) {
   this.name = "MMC3";
+  this.version = 1;
 
   this.nes = nes;
 
   this.rom = rom;
 
-  this.banks = header.banks;
-  this.chrBanks = header.chrBanks;
-  this.base = 0x10 + (header.trainer ? 512 : 0);
-
-  let neededLength = this.base + 0x4000 * this.banks + 0x2000 * this.chrBanks;
-  if(this.rom.length < neededLength) {
-    throw new Error("rom is not complete");
-  }
+  this.h = header;
 
   this.chrRam = new Uint8Array(0x2000);
-
   this.prgRam = new Uint8Array(0x2000);
+  this.ppuRam = new Uint8Array(0x800);
 
   this.bankRegs = new Uint8Array(8);
 
@@ -27,9 +21,15 @@ mappers[4] = function(nes, rom, header) {
       for(let i = 0; i < this.chrRam.length; i++) {
         this.chrRam[i] = 0;
       }
-      // clear prg ram
-      for(let i = 0; i < this.prgRam.length; i++) {
-        this.prgRam[i] = 0;
+      // clear prg ram, only if not battery backed
+      if(!this.h.battery) {
+        for(let i = 0; i < this.prgRam.length; i++) {
+          this.prgRam[i] = 0;
+        }
+      }
+      // clear ppu ram
+      for(let i = 0; i < this.ppuRam.length; i++) {
+        this.ppuRam[i] = 0;
       }
     }
     for(let i = 0; i < this.bankRegs.length; i++) {
@@ -50,35 +50,47 @@ mappers[4] = function(nes, rom, header) {
   }
   this.reset(true);
   this.saveVars = [
-    "name", "chrRam", "prgRam", "bankRegs", "mirroring", "prgMode", "chrMode",
-    "regSelect", "reloadIrq", "irqLatch", "irqEnabled", "irqCounter",
+    "name", "chrRam", "prgRam", "ppuRam", "bankRegs", "mirroring", "prgMode",
+    "chrMode", "regSelect", "reloadIrq", "irqLatch", "irqEnabled", "irqCounter",
     "lastRead"
   ];
 
+  this.getBattery = function() {
+    return Array.prototype.slice.call(this.prgRam);
+  }
+
+  this.setBattery = function(data) {
+    if(data.length !== 0x2000) {
+      return false;
+    }
+    this.prgRam = new Uint8Array(data);
+    return true;
+  }
+
   this.getRomAdr = function(adr) {
-    let bank0 = this.bankRegs[6] & ((this.banks * 2) - 1);
-    let bank1 = this.bankRegs[7] & ((this.banks * 2) - 1);
+    let final = 0;
     if(this.prgMode === 1) {
       if(adr < 0xa000) {
-        return ((this.banks * 2) - 2) * 0x2000 + (adr & 0x1fff);
+        final = ((this.h.banks * 2) - 2) * 0x2000 + (adr & 0x1fff);
       } else if(adr < 0xc000) {
-        return bank1 * 0x2000 + (adr & 0x1fff);
+        final = this.bankRegs[7] * 0x2000 + (adr & 0x1fff);
       } else if(adr < 0xe000) {
-        return bank0 * 0x2000 + (adr & 0x1fff);
+        final = this.bankRegs[6] * 0x2000 + (adr & 0x1fff);
       } else {
-        return ((this.banks * 2) - 1) * 0x2000 + (adr & 0x1fff);
+        final = ((this.h.banks * 2) - 1) * 0x2000 + (adr & 0x1fff);
       }
     } else {
       if(adr < 0xa000) {
-        return bank0 * 0x2000 + (adr & 0x1fff);
+        final = this.bankRegs[6] * 0x2000 + (adr & 0x1fff);
       } else if(adr < 0xc000) {
-        return bank1 * 0x2000 + (adr & 0x1fff);
+        final = this.bankRegs[7] * 0x2000 + (adr & 0x1fff);
       } else if(adr < 0xe000) {
-        return ((this.banks * 2) - 2) * 0x2000 + (adr & 0x1fff);
+        final = ((this.h.banks * 2) - 2) * 0x2000 + (adr & 0x1fff);
       } else {
-        return ((this.banks * 2) - 1) * 0x2000 + (adr & 0x1fff);
+        final = ((this.h.banks * 2) - 1) * 0x2000 + (adr & 0x1fff);
       }
     }
+    return final & this.h.prgAnd;
   }
 
   this.getMirroringAdr = function(adr) {
@@ -92,32 +104,24 @@ mappers[4] = function(nes, rom, header) {
   }
 
   this.getChrAdr = function(adr) {
-    let bankCount = this.chrBanks * 8;
-    if(bankCount === 0) {
-      bankCount = 8;
-    }
     if(this.chrMode === 1) {
       adr ^= 0x1000;
     }
-    let bank0 = (this.bankRegs[0] & (bankCount - 1)) >> 1;
-    let bank1 = (this.bankRegs[1] & (bankCount - 1)) >> 1;
-    let bank2 = this.bankRegs[2] & (bankCount - 1);
-    let bank3 = this.bankRegs[3] & (bankCount - 1);
-    let bank4 = this.bankRegs[4] & (bankCount - 1);
-    let bank5 = this.bankRegs[5] & (bankCount - 1);
+    let final = 0;
     if(adr < 0x800) {
-      return bank0 * 0x800 + (adr & 0x7ff);
+      final = (this.bankRegs[0] >> 1) * 0x800 + (adr & 0x7ff);
     } else if(adr < 0x1000) {
-      return bank1 * 0x800 + (adr & 0x7ff);
+      final = (this.bankRegs[1] >> 1) * 0x800 + (adr & 0x7ff);
     } else if(adr < 0x1400) {
-      return bank2 * 0x400 + (adr & 0x3ff);
+      final = this.bankRegs[2] * 0x400 + (adr & 0x3ff);
     } else if(adr < 0x1800) {
-      return bank3 * 0x400 + (adr & 0x3ff);
+      final = this.bankRegs[3] * 0x400 + (adr & 0x3ff);
     } else if(adr < 0x1c00) {
-      return bank4 * 0x400 + (adr & 0x3ff);
+      final = this.bankRegs[4] * 0x400 + (adr & 0x3ff);
     } else {
-      return bank5 * 0x400 + (adr & 0x3ff);
+      final = this.bankRegs[5] * 0x400 + (adr & 0x3ff);
     }
+    return final & this.h.chrAnd;
   }
 
   this.clockIrq = function() {
@@ -140,7 +144,7 @@ mappers[4] = function(nes, rom, header) {
     if(adr < 0x8000) {
       return this.prgRam[adr & 0x1fff];
     }
-    return this.rom[this.base + this.getRomAdr(adr)];
+    return this.rom[this.h.base + this.getRomAdr(adr)];
   }
 
   this.write = function(adr, value) {
@@ -190,14 +194,10 @@ mappers[4] = function(nes, rom, header) {
     }
   }
 
-  // return if this read had to come from internal and which address
-  // or else the value itself
+  // ppu-read
   this.ppuRead = function(adr) {
     if(adr < 0x2000) {
-      // clocking irq only happens for chr-fetches?
-      // otherwise Mega Man 3's in-level menu breaks
-
-      // A12 should be ignored for 8 cycles after going high?
+      // A12 should be ignored for 8 cycles after going high
       // see https://forums.nesdev.com/viewtopic.php?f=3&t=17290#p217456
       // ignore for nametables, for now
       if((this.lastRead & 0x1000) === 0 && (adr & 0x1000) > 0) {
@@ -205,31 +205,28 @@ mappers[4] = function(nes, rom, header) {
         this.clockIrq();
       }
       this.lastRead = adr;
-      if(this.chrBanks === 0) {
-        return [true, this.chrRam[this.getChrAdr(adr)]];
+      if(this.h.chrBanks === 0) {
+        return this.chrRam[this.getChrAdr(adr)];
       } else {
-        return [true, this.rom[
-          this.base + 0x4000 * this.banks + this.getChrAdr(adr)
-        ]];
+        return this.rom[this.h.chrBase + this.getChrAdr(adr)];
       }
     } else {
-      return [false, this.getMirroringAdr(adr)];
+      return this.ppuRam[this.getMirroringAdr(adr)];
     }
   }
 
-  // return if this write had to go to internal and which address
-  // or else only that the write happened
+  // ppu-write
   this.ppuWrite = function(adr, value) {
     if(adr < 0x2000) {
-      if(this.chrBanks === 0) {
+      if(this.h.chrBanks === 0) {
         this.chrRam[this.getChrAdr(adr)] = value;
-        return [true, 0];
+        return;
       } else {
         // not writable
-        return [true, 0];
+        return;
       }
     } else {
-      return [false, this.getMirroringAdr(adr)];
+      return this.ppuRam[this.getMirroringAdr(adr)] = value;
     }
   }
 

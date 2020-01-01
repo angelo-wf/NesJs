@@ -4,8 +4,7 @@ function Ppu(nes) {
   // memory handler
   this.nes = nes;
 
-  // nametable memory
-  this.ppuRam = new Uint8Array(0x800);
+  // nametable memory stored in mapper to simplify code
 
   // palette memory
   this.paletteRam = new Uint8Array(0x20);
@@ -21,9 +20,6 @@ function Ppu(nes) {
   this.pixelOutput = new Uint16Array(256 * 240);
 
   this.reset = function() {
-    for(let i = 0; i < this.ppuRam.length; i++) {
-      this.ppuRam[i] = 0;
-    }
     for(let i = 0; i < this.paletteRam.length; i++) {
       this.paletteRam[i] = 0;
     }
@@ -425,22 +421,12 @@ function Ppu(nes) {
 
   this.readInternal = function(adr) {
     adr &= 0x3fff;
-    let readVal = this.nes.mapper.ppuRead(adr);
-    if(readVal[0]) {
-      return readVal[1];
-    } else {
-      return this.ppuRam[readVal[1]];
-    }
+    return this.nes.mapper.ppuRead(adr);
   }
 
   this.writeInternal = function(adr, value) {
     adr &= 0x3fff;
-    let writeVal = this.nes.mapper.ppuWrite(adr, value);
-    if(writeVal[0]) {
-      return;
-    } else {
-      this.ppuRam[writeVal[1]] = value;
-    }
+    this.nes.mapper.ppuWrite(adr, value);
   }
 
   this.readPalette = function(adr) {

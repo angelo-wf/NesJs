@@ -149,7 +149,7 @@ function update() {
 
 function runFrame() {
   nes.runFrame();
-  nes.getSamples(audioHandler.sampleBuffer);
+  nes.getSamples(audioHandler.sampleBuffer, audioHandler.samplesPerFrame);
   audioHandler.nextBuffer();
   nes.getPixels(imgData.data);
   ctx.putImageData(imgData, 0, 0);

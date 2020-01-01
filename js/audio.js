@@ -4,13 +4,19 @@ function AudioHandler() {
   this.hasAudio = true;
   let Ac = window.AudioContext || window.webkitAudioContext;
   this.sampleBuffer = new Float64Array(735);
+  this.samplesPerFrame = 735
 
   if(Ac === undefined) {
     log("Audio disabled: no Web Audio API support");
     this.hasAudio = false;
   } else {
     this.actx = new Ac();
-    log("Audio initialized, sample rate: " + this.actx.sampleRate);
+
+    let samples = this.actx.sampleRate / 60
+    this.sampleBuffer = new Float64Array(samples);
+    this.samplesPerFrame = samples
+
+    log("Audio initialized, sample rate: " + samples * 60);
 
     this.inputBuffer = new Float64Array(4096);
     this.inputBufferPos = 0;
