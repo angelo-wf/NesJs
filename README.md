@@ -5,13 +5,13 @@ Yet another NES emulator, in javascript for in the browser.
 The CPU has almost all instructions emulated, but it is not cycle-accurate (and doesn't emulate the 'unstable' undocumented instructions).
 The PPU has full background and sprite rendering, but it is also not cycle-accurate. The APU emulates all 5 channels, but it is again not fully accurate.
 There are also some other inaccuracies (with OAM-DMA and such).
-Most games however seem to run fine.
+Most games however seem to run fine (except the known broken games listed below).
 
 Standard controllers 1 and 2 are emulated.
 
 Supports mapper 0 (NROM), 1 (MMC1), 2 (UxROM), 3 (CNROM), 4 (MMC3) and 7 (AxROM). The MMC3's IRQ emulation is not really accurate though.
 
-There is support for both save states and battery saves (the demo does not yet handle battery saves, though).
+There is support for both save states and battery saves.
 
 ## Demo
 
@@ -38,7 +38,7 @@ Pressing M will make a save state, and pressing N will load it.
 
 Roms can be loaded from zip-files as well, which will load the first file with a .nes extension it can find.
 
-The demo does not yet handle battery saves.
+Save states and battery saves are stored in localStorage and therefore retained between visits/reloads.
 
 ## Usage
 

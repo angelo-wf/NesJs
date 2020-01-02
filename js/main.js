@@ -5,7 +5,7 @@ let paused = false;
 let loaded = false;
 let pausedInBg = false;
 let loopId = 0;
-let saveState = undefined;
+let loadedName = "";
 
 let c = el("output");
 c.width = 256;
@@ -61,7 +61,7 @@ el("rom").onchange = function(e) {
                 breader.onload = function() {
                   let rbuf = breader.result;
                   let arr = new Uint8Array(rbuf);
-                  loadRom(arr);
+                  loadRom(arr, name);
                   reader.close(function() {});
                 }
                 breader.readAsArrayBuffer(blob);
@@ -80,8 +80,10 @@ el("rom").onchange = function(e) {
       });
     } else {
       // load rom normally
+      let parts = e.target.value.split("\\");
+      let name = parts[parts.length - 1];
       let arr = new Uint8Array(buf);
-      loadRom(arr);
+      loadRom(arr, name);
     }
   }
   freader.readAsArrayBuffer(e.target.files[0]);
@@ -97,7 +99,7 @@ el("pause").onclick = function(e) {
     cancelAnimationFrame(loopId);
     audioHandler.stop();
     paused = true;
-    el("pause").innerText = "Continue";
+    el("pause").innerText = "Unpause";
   }
 }
 
@@ -130,15 +132,42 @@ document.onvisibilitychange = function(e) {
   }
 }
 
-function loadRom(rom) {
+window.onpagehide = function(e) {
+  saveBatteryForRom();
+}
+
+function loadRom(rom, name) {
+  saveBatteryForRom();
   if(nes.loadRom(rom)) {
-    saveState = undefined;
+    // load the roms battery data
+    let data = localStorage.getItem(name + "_battery");
+    if(data) {
+      let obj = JSON.parse(data);
+      nes.setBattery(obj);
+      log("Loaded battery");
+    }
     nes.reset(true);
     if(!loaded && !paused) {
       loopId = requestAnimationFrame(update);
       audioHandler.start();
     }
     loaded = true;
+    loadedName = name;
+  }
+}
+
+function saveBatteryForRom() {
+  // save the loadedName's battery data
+  if(loaded) {
+    let data = nes.getBattery();
+    if(data) {
+      try {
+        localStorage.setItem(loadedName + "_battery", JSON.stringify(data));
+        log("Saved battery");
+      } catch(e) {
+        log("Failed to save battery: " + e);
+      }
+    }
   }
 }
 
@@ -185,12 +214,19 @@ window.onkeyup = function(e) {
     e.preventDefault();
   }
   if(e.key.toLowerCase() === "m" && loaded) {
-    saveState = nes.getState();
-    log("Saved state");
+    let saveState = nes.getState();
+    try {
+      localStorage.setItem(loadedName + "_savestate", JSON.stringify(saveState));
+      log("Saved state");
+    } catch(e) {
+      log("Failed to save state: " + e);
+    }
   }
   if(e.key.toLowerCase() === "n" && loaded) {
-    if(saveState) {
-      if(nes.setState(saveState)) {
+    let data = localStorage.getItem(loadedName + "_savestate");
+    if(data) {
+      let obj = JSON.parse(data);
+      if(nes.setState(obj)) {
         log("Loaded state");
       } else {
         log("Failed to load state");

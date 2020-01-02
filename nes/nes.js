@@ -299,14 +299,14 @@ function Nes() {
   // save states, battery saves
   this.getBattery = function() {
     if(this.mapper.h.battery) {
-      return this.mapper.getBattery();
+      return {data: this.mapper.getBattery()};
     }
     return undefined;
   }
 
   this.setBattery = function(data) {
     if(this.mapper.h.battery) {
-      return this.mapper.setBattery(data);
+      return this.mapper.setBattery(data.data);
     }
     return true;
   }
