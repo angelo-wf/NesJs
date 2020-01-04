@@ -18,6 +18,11 @@ function Nes() {
   this.currentControl1State = 0;
   this.currentControl2State = 0;
 
+  // callbacks for onread(adr, val), onwrite(adr, val) and onexecute(adr, val)
+  this.onread = undefined;
+  this.onwrite = undefined;
+  this.onexecute = undefined;
+
   this.reset = function(hard) {
     if(hard) {
       for(let i = 0; i < this.ram.length; i++) {
@@ -156,6 +161,9 @@ function Nes() {
       }
 
       if(!this.inDma) {
+        if(this.onexecute && this.cpu.cyclesLeft === 0) {
+          this.onexecute(this.cpu.br[0], this.peak(this.cpu.br[0]));
+        }
         this.cpu.cycle();
       } else {
         // handle dma
@@ -189,9 +197,42 @@ function Nes() {
     } while(!(this.ppu.line === 240 && this.ppu.dot === 0));
   }
 
+  // peak
+  this.peak = function(adr) {
+    adr &= 0xffff;
+    if(adr < 0x2000) {
+      // ram
+      return this.ram[adr & 0x7ff];
+    }
+    if(adr < 0x4000) {
+      // ppu ports
+      return this.ppu.peak(adr & 0x7);
+    }
+    if(adr < 0x4020) {
+      // apu/misc ports
+      if(adr === 0x4014) {
+        return 0; // not readable
+      }
+      if(adr === 0x4016) {
+        let ret = this.latchedControl1State & 1;
+        return ret | 0x40;
+      }
+      if(adr === 0x4017) {
+        let ret = this.latchedControl2State & 1;
+        return ret | 0x40;
+      }
+      return this.apu.peak(adr);
+    }
+    return this.mapper.peak(adr);
+  }
+
   // cpu read
   this.read = function(adr) {
     adr &= 0xffff;
+    if(this.onread) {
+      this.onread(adr, this.peak(adr));
+    }
+
     if(adr < 0x2000) {
       // ram
       return this.ram[adr & 0x7ff];
@@ -228,6 +269,9 @@ function Nes() {
   // cpu write
   this.write = function(adr, value) {
     adr &= 0xffff;
+    if(this.onwrite) {
+      this.onwrite(adr, value);
+    }
     if(adr < 0x2000) {
       // ram
       this.ram[adr & 0x7ff] = value;

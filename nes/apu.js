@@ -476,6 +476,21 @@ function Apu(nes) {
     return ret;
   }
 
+  this.peak = function(adr) {
+    if(adr === 0x4015) {
+      let ret = 0;
+      ret |= (this.p1Counter > 0) ? 0x1 : 0;
+      ret |= (this.p2Counter > 0) ? 0x2 : 0;
+      ret |= (this.triCounter > 0) ? 0x4 : 0;
+      ret |= (this.noiseCounter > 0) ? 0x8 : 0;
+      ret |= (this.dmcBytesLeft > 0) ? 0x10 : 0;
+      ret |= this.nes.frameIrqWanted ? 0x40 : 0;
+      ret |= this.nes.dmcIrqWanted ? 0x80 : 0;
+      return ret;
+    }
+    return 0;
+  }
+
   this.read = function(adr) {
     if(adr === 0x4015) {
       let ret = 0;

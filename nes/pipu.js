@@ -451,6 +451,48 @@ function Ppu(nes) {
     this.paletteRam[palAdr] = value;
   }
 
+  this.peak = function(adr) {
+    switch(adr) {
+      case 0:
+      case 1: {
+        // PPUCTRL, PPUMASK
+        return 0; // not readable
+      }
+      case 2: {
+        // PPUSTATUS
+        let ret = 0;
+        if(this.inVblank) {
+          ret |= 0x80;
+        }
+        ret |= this.spriteZero ? 0x40 : 0;
+        ret |= this.spriteOverflow ? 0x20 : 0;
+        return ret;
+      }
+      case 3: {
+        // OAMADDR
+        return 0; // not readable
+      }
+      case 4: {
+        // OAMDATA
+        return this.oamRam[this.oamAddress];
+      }
+      case 5:{
+        // PPUSCROLL, PPUADDR
+        return 0; // not readable
+      }
+      case 7: {
+        // PPUDATA
+        let adr = this.v & 0x3fff;
+        let temp = this.readBuffer;
+        if(adr >= 0x3f00) {
+          // read palette in temp
+          temp = this.readPalette(adr);
+        }
+        return temp;
+      }
+    }
+  }
+
   this.read = function(adr) {
     switch(adr) {
       case 0: {
@@ -469,12 +511,8 @@ function Ppu(nes) {
           ret |= 0x80;
           this.inVblank = false;
         }
-        if(this.spriteZero) {
-          ret |= 0x40;
-        }
-        if(this.spriteOverflow) {
-          ret |= 0x20;
-        }
+        ret |= this.spriteZero ? 0x40 : 0;
+        ret |= this.spriteOverflow ? 0x20 : 0;
         return ret;
       }
       case 3: {
@@ -525,26 +563,10 @@ function Ppu(nes) {
         this.t &= 0x73ff;
         this.t |= (value & 0x3) << 10;
 
-        if((value & 0x04) > 0) {
-          this.vramIncrement = 32;
-        } else {
-          this.vramIncrement = 1;
-        }
-        if((value & 0x08) > 0) {
-          this.spritePatternBase = 0x1000;
-        } else {
-          this.spritePatternBase = 0;
-        }
-        if((value & 0x10) > 0) {
-          this.bgPatternBase = 0x1000;
-        } else {
-          this.bgPatternBase = 0;
-        }
-        if((value & 0x20) > 0) {
-          this.spriteHeight = 16;
-        } else {
-          this.spriteHeight = 8;
-        }
+        this.vramIncrement = (value & 0x04) > 0 ? 32 : 1;
+        this.spritePatternBase = (value & 0x08) > 0 ? 0x1000 : 0;
+        this.bgPatternBase = (value & 0x10) > 0 ? 0x1000 : 0;
+        this.spriteHeight = (value & 0x20) > 0 ? 16 : 8;
         let oldNmi = this.generateNmi;
         this.slave = (value & 0x40) > 0;
         this.generateNmi = (value & 0x80) > 0;

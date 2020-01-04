@@ -68,6 +68,10 @@ mappers[0] = function(nes, rom, header) {
     return adr;
   }
 
+  this.peak = function(adr) {
+    return this.read(adr);
+  }
+
   this.read = function(adr) {
     if(adr < 0x6000) {
       return 0; // not readable
@@ -83,6 +87,10 @@ mappers[0] = function(nes, rom, header) {
       return; // no mapper registers
     }
     this.prgRam[adr & 0x1fff] = value;
+  }
+
+  this.ppuPeak = function(adr) {
+    return this.ppuRead(adr);
   }
 
   // ppu-read

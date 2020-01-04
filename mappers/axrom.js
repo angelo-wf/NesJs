@@ -59,6 +59,10 @@ mappers[7] = function(nes, rom, header) {
     return adr;
   }
 
+  this.peak = function(adr) {
+    return this.read(adr);
+  }
+
   this.read = function(adr) {
     if(adr < 0x8000) {
       return 0; // not readable
@@ -72,6 +76,10 @@ mappers[7] = function(nes, rom, header) {
     }
     this.prgBank = value & 0xf;
     this.mirroring = (value & 0x10) >> 4;
+  }
+
+  this.ppuPeak = function(adr) {
+    return this.ppuRead(adr);
   }
 
   // ppu-read

@@ -137,6 +137,10 @@ mappers[4] = function(nes, rom, header) {
     }
   }
 
+  this.peak = function(adr) {
+    return this.read(adr);
+  }
+
   this.read = function(adr) {
     if(adr < 0x6000) {
       return 0; // not readable
@@ -191,6 +195,18 @@ mappers[4] = function(nes, rom, header) {
         this.irqEnabled = true;
         break;
       }
+    }
+  }
+
+  this.ppuPeak = function(adr) {
+    if(adr < 0x2000) {
+      if(this.h.chrBanks === 0) {
+        return this.chrRam[this.getChrAdr(adr)];
+      } else {
+        return this.rom[this.h.chrBase + this.getChrAdr(adr)];
+      }
+    } else {
+      return this.ppuRam[this.getMirroringAdr(adr)];
     }
   }
 

@@ -120,6 +120,10 @@ mappers[1] = function(nes, rom, header) {
     return final & this.h.chrAnd;
   }
 
+  this.peak = function(adr) {
+    return this.read(adr);
+  }
+
   this.read = function(adr) {
     if(adr < 0x6000) {
       return 0; // not readable
@@ -176,6 +180,10 @@ mappers[1] = function(nes, rom, header) {
         this.shiftReg = 0;
       }
     }
+  }
+
+  this.ppuPeak = function(adr) {
+    return this.ppuRead(adr);
   }
 
   // ppu-read
