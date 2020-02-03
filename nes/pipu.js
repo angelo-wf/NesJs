@@ -476,7 +476,8 @@ function Ppu(nes) {
         // OAMDATA
         return this.oamRam[this.oamAddress];
       }
-      case 5:{
+      case 5:
+      case 6: {
         // PPUSCROLL, PPUADDR
         return 0; // not readable
       }

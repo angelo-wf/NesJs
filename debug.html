@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="dstyle.css">
+  <title>NesJS</title>
+</head>
+<body>
+  <div id="wrapper">
+    <div id="tl">
+      <input id="rom" type="file">
+      <button id="pause">Pause</button>
+      <button id="reset">Reset</button>
+      <button id="hardreset">Power cycle</button><br>
+      <canvas id="output"></canvas>
+    </div>
+    <div id="bl">
+      <pre id="log"></pre>
+      <p>
+        NesJs (debugger), by elzo_d. <a href="index.html">Non-debugger</a><br>
+        Source on <a href="https://github.com/elzo-d/NesJs">Github</a>.
+      </p>
+    </div>
+    <div id="tr">
+      <button id="bpatterns">Patterns &amp; palettes</button>
+      <button id="bnametables">Nametables</button>
+      <button id="bram">Memory</button>
+      <button id="bdis">Dissasembly</button><br>
+      <canvas id="doutput" style="display: block;"></canvas>
+      <pre id="dtextoutput" class="state" style="display: none;">0000: xx</p>
+    </div>
+    <div id="br">
+      <button id="runframe">Run frame</button>
+      <button id="stepinstr">Step</button>
+      <p id="cpustate" class="state">A: xx; X: xx, Y: xx, PC: xxxx, SP: xx, nv--dizc</p>
+      <p id="ppustate" class="state">line: xxx, dot: xxx, v: xxxx, t: xxxx, x: x, w: x</p>
+      <p>Breakpoints:</p>
+      <p class="state">
+        Address (hex): <input id="bpaddress" value="0">
+        <select id="bptype">
+          <option value="0">Read</option>
+          <option value="1">Write</option>
+          <option value="2">Execute</option>
+        </select>
+        <button id="bpadd">Add breakpoint</button>
+      </p>
+      <p id="breakpoints" class="state"></p>
+    </div>
+  </div>
+
+  <script src="lib/zip.js"></script>
+  <script src="lib/inflate.js"></script>
+
+  <script src="nes/mappers.js"></script>
+  <script src="mappers/nrom.js"></script>
+  <script src="mappers/mmc1.js"></script>
+  <script src="mappers/uxrom.js"></script>
+  <script src="mappers/cnrom.js"></script>
+  <script src="mappers/mmc3.js"></script>
+  <script src="mappers/axrom.js"></script>
+
+  <script src="nes/cpu.js"></script>
+  <script src="nes/pipu.js"></script>
+  <script src="nes/apu.js"></script>
+  <script src="nes/nes.js"></script>
+
+  <script src="js/debugger.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/dbmain.js"></script>
+
+</body>
+</html>

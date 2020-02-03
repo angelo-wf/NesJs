@@ -305,11 +305,11 @@ function Nes() {
 
   // print bytes and words nicely
   this.getByteRep = function(val) {
-    return ("0" + val.toString(16)).slice(-2).toUpperCase();
+    return ("0" + val.toString(16)).slice(-2);
   }
 
   this.getWordRep = function(val) {
-    return ("000" + val.toString(16)).slice(-4).toUpperCase();
+    return ("000" + val.toString(16)).slice(-4);
   }
 
   // get controls in

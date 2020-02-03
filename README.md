@@ -18,6 +18,7 @@ There is support for both save states and battery saves.
 Try the demo online [here](https://elzo-d.github.io/NesJs/). To run the demo offline:
 - Clone this repository.
 - Open `index.html` in a browser. Messing around with the browsers autoplay policy might be required.
+- The `Debugger` link at the bottom leads to `debug.html`, which contains a basic debugger.
 
 The emulator runs in Firefox, Chrome, Safari, Edge and Internet Explorer 11. IE11 does not have sound, due to lack of the web-audio-API.
 
@@ -38,24 +39,35 @@ Pressing M will make a save state, and pressing N will load it.
 
 Roms can be loaded from zip-files as well, which will load the first file with a .nes extension it can find.
 
-Save states and battery saves are stored in localStorage and therefore retained between visits/reloads.
+Save states and battery saves are stored in localStorage and therefore retained between visits/reloads and are shared between the normal and debugger version.
+
+## Debugger
+
+The debugger, accessed by loading `debug.html`, or the `Debugger` link, has basic debugging functionality.
+
+It allows viewing the patterntables & palettes, the nametables, the CPU memory-space and a disassembly of all code that has been executed, with a mark at the current PC. Additionally, the current CPU and PPU state can be seen.
+
+Single instructions or single frames can be executed, and read, write and execute breakpoints can be set within CPU address space. (Note that read and write breakpoint will pause emulation after the opcode that caused the read or write. Execute-breakpoints will pause emulation with the CPU ready to execute that instruction).
+
+Stepping after pausing (or when a breakpoint triggered) might not immediately execute the pointed to opcode, the first step will instead finish the instruction that was running when emulation was paused.
 
 ## Usage
 
 To include the emulator:
 
 ```html
-<!-- first include this file, followed by the mappers that are needed -->
+<!-- include this file, followed by the mappers that are needed -->
 <script src="nes/mapppers.js"></script>
 <script src="mappers/nrom.js"></script>
 <script src="mappers/mmc1.js"></script>
-<!-- then include the rest -->
+<!-- and include the rest -->
 <script src="nes/cpu.js"></script>
 <script src="nes/pipu.js"></script>
 <script src="nes/apu.js"></script>
 <script src="nes/nes.js"></script>
 
-<!-- A global function called 'log', taking a string, is also needed, which gets called with status messages when loading roms, etc -->
+<!-- A global function called 'log', taking a string, is also needed, which gets called with status messages
+when loading roms, etc -->
 <script>
   function log(str) {
     console.log(str)
@@ -83,7 +95,8 @@ if(nes.loadRom(rom)) {
 nes.runFrame();
 
 // get the image output
-// data should be an Uint8Array with 256*240*4 values, 4 for each pixel (r, g, b, a), as in the data for a canvas-2d-context imageData object
+// data should be an Uint8Array with 256*240*4 values, 4 for each pixel (r, g, b, a),
+// as in the data for a canvas-2d-context imageData object
 nes.getPixels(data);
 // for example:
 // once
@@ -94,10 +107,13 @@ nes.getPixels(imgData.data);
 ctx.putImageData(imgData, 0, 0);
 
 // get the sound output
-// audioData should be an Float64Array, and will be filled with the amount of samples specified (usually the sample rate divided by 60)
+// audioData should be an Float64Array, and will be filled with the amount of samples specified
+// (usually the sample rate divided by 60)
 nes.getSamples(audioData, 44100 / 60);
 // see js/audio.js for a example on how this can be played.
-// the basic idea is to use an ScriptProcessorNode, fill a buffer (audioData above) with the samples and write it to a ring-buffer each frame, and have the ScriptProcessorNode's callback read from the ring-buffer, making sure that the read-position is always behind the write-position
+// the basic idea is to use an ScriptProcessorNode, fill a buffer (audioData above)
+// with the samples and write it to a ring-buffer each frame, and have the ScriptProcessorNode's
+// callback read from the ring-buffer, making sure that the read-position is always behind the write-position
 
 // set controller state
 nes.setButtonPressed(1, nes.INPUT.B); // player 1 is now pressing the B button
@@ -106,9 +122,11 @@ nes.setButtonReleased(1, nes.INPUT.B); // player 1 released B
 nes.setButtonReleased(2, nes.INPUT.SELECT); // now no buttons are pressed anymore
 // nes.INPUT contains A, B, SELECT, START, UP, DOWN, LEFT and RIGHT
 
+
 // other functions (only call if a rom is loaded)
-nes.reset(); // soft reset (as in the reset button being pressed)
-nes.reset(true); // hard reset (as in the NES being turned off and on again)
+
+nes.reset(); // soft reset (as in the reset button being pressed, ram is retained)
+nes.reset(true); // hard reset (as in the NES being turned off and on again, ram is reset)
 let state = nes.getState(); // get the full state as an object
 if(nes.setState(state)) {
   // the state-object has been loaded
@@ -122,6 +140,23 @@ if(nes.setBattery(battery)) {
 } else {
   // failed to load battery data
 }
+
+nes.cycle(); // run a single PPU cycle (and a CPU cycle every three calls)
+nes.peak(0x8000); // peaks a value from the CPU address-space (will have no side effects)
+nes.mapper.ppuPeak(0x1204); // peaks a value from the PPU address-space (will have no side effects)
+nes.read(0x2007); // reads a value from the CPU address-space (can have side effects)
+nes.mapper.ppuRead(0x2690); // reads a value from the PPU address-space (can have side effects)
+nes.write(0x0723, 0x12); // writes a value to the CPU address-space
+nes.mapper.ppuWrite(0x23c0, 0x34); // Writes a value to the PPU address-space
+// note that reading from PPU address-space does not allow reading the palette from 0x3f00-0x3fff
+// it will return the nametable-data 'behind' it
+
+// callbacks, these will be called during execution of nes.cycle() or nes.runFrame() when they are assigned a function
+nes.onread = (address, value) => {console.log(`read ${value} from ${address}`)};
+nes.onwrite = (address, value) => {console.log(`wrote ${value} to ${address}`)};
+nes.onexecute = (address, value) => {console.log(`executed from ${address} (opcode byte: ${value})`)};
+
+// more functions and properties are available, just checking the .js files themselves is probably the easiest way to see these
 ```
 
 ## Known broken games
@@ -149,6 +184,10 @@ Almost all of those cases (and most of these cases as well) come down to the emu
   - Freezes on boot (grey screen)
 - Vegas Dream
   - Freezes on boot (screen filled with single repeating tile)
+- GI Joe - A Real American Hero
+  - Freezes on boot (grey screen)
+- GI Joe - The Atlantic Factor
+  - Freezes on boot (black screen)
 
 
 ## Credits
