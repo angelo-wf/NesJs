@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+<head>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <title>NsfJS</title>
+</head>
+<body>
+  <input id="rom" type="file">
+  <button id="pause">Pause</button>
+  <button id="reset">Restart song</button>
+  <button id="prevsong">Previuos song</button>
+  <button id="nextsong">Next song</button><br>
+  <canvas id="output"></canvas>
+  <pre id="log"></pre>
+  <p>
+    NsfJs, by elzo_d. <a href="index.html">NesJs</a>.<br>
+    Source on <a href="https://github.com/elzo-d/NesJs">Github</a>.
+  </p>
+
+  <script src="lib/zip.js"></script>
+  <script src="lib/inflate.js"></script>
+
+  <script src="nes/cpu.js"></script>
+  <script src="nes/apu.js"></script>
+  <script src="js/nsfmapper.js"></script>
+  <script src="js/nsf.js"></script>
+
+  <script src="js/audio.js"></script>
+  <script src="js/nsfmain.js"></script>
+
+</body>
+</html>

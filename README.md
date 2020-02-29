@@ -19,8 +19,9 @@ Try the demo online [here](https://elzo-d.github.io/NesJs/). To run the demo off
 - Clone this repository.
 - Open `index.html` in a browser. Messing around with the browsers autoplay policy might be required.
 - The `Debugger` link at the bottom leads to `debug.html`, which contains a basic debugger.
+- The `NsfJs` link at the bottom leads to `nsfplayer.html`, which contains an NSF player.
 
-The emulator runs in Firefox, Chrome, Safari, Edge and Internet Explorer 11. IE11 does not have sound, due to lack of the web-audio-API.
+The emulator runs in Firefox, Chrome, Safari, Edge and Internet Explorer 11. IE11 does not have sound, due to lack of the web-audio-API. The debugger does not work in IE11. NsfJs technically works in IE11, but lack of audio means it does not have much use.
 
 Controllers 1 and 2 are emulated, with the following mapping:
 
@@ -43,13 +44,21 @@ Save states and battery saves are stored in localStorage and therefore retained 
 
 ## Debugger
 
-The debugger, accessed by loading `debug.html`, or the `Debugger` link, has basic debugging functionality.
+The [debugger](https://elzo-d.github.io/NesJs/debug.html), accessed by loading `debug.html`, or the `Debugger` link, has basic debugging functionality.
 
 It allows viewing the patterntables & palettes, the nametables, the CPU memory-space and a disassembly of all code that has been executed, with a mark at the current PC. Additionally, the current CPU and PPU state can be seen.
 
 Single instructions or single frames can be executed, and read, write and execute breakpoints can be set within CPU address space. (Note that read and write breakpoint will pause emulation after the opcode that caused the read or write. Execute-breakpoints will pause emulation with the CPU ready to execute that instruction).
 
 Stepping after pausing (or when a breakpoint triggered) might not immediately execute the pointed to opcode, the first step will instead finish the instruction that was running when emulation was paused.
+
+## NSF player
+
+[NsfJs](https://elzo-d.github.io/NesJs/nsfplayer.html), accessed by loading `nsfplayer.html`, or the `NsfJs` link, is a basic NSF player.
+
+It only supports standard NTSC timings, and only basic 2A03 audio is supported (so none of the expansion chips).
+
+It shows the game/artist/copyright for the loaded NSF file, and bars indicating the volume and pitch for each channel (pulse 1, pulse 2, triangle, noise and DMC from left to right). The volume is based on the volume, envelope and the length counter for the pulse and noise channel, the length counters for the triangle channel and the sample-bytes left for the DMC. The pitch is based on the period-timer for each channel.
 
 ## Usage
 

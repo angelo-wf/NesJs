@@ -27,6 +27,7 @@ function Debugger(nes, ctx) {
       this.nes.reset(true);
       // reset breakpoints
       this.breakpoints = [];
+      this.updateBreakpointList();
       // clear ram cdl
       for(let i = 0; i < 0x8000; i++) {
         this.ramCdl[i] = 0;

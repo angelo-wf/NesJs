@@ -231,11 +231,15 @@ function el(id) {
 window.onkeydown = function(e) {
   if(controlsP1[e.key.toLowerCase()] !== undefined) {
     db.nes.setButtonPressed(1, controlsP1[e.key.toLowerCase()]);
-    e.preventDefault();
+    if(el("bpaddress") !== document.activeElement) {
+      e.preventDefault();
+    }
   }
   if(controlsP2[e.key.toLowerCase()] !== undefined) {
     db.nes.setButtonPressed(2, controlsP2[e.key.toLowerCase()]);
-    e.preventDefault();
+    if(el("bpaddress") !== document.activeElement) {
+      e.preventDefault();
+    }
   }
 }
 
@@ -317,6 +321,7 @@ el("runframe").onclick = function() {
 }
 
 el("bpadd").onclick = function() {
+  if(!loaded) return;
   let adr = parseInt(el("bpaddress").value, 16);
   if(isNaN(adr) || adr < 0 || adr >= 0x10000) {
     log("Invalid address for breakpoint");
