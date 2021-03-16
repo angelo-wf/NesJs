@@ -144,7 +144,8 @@ function Nes() {
   }
 
   this.cycle = function() {
-    if(this.cycles % 3 === 0) {
+    if(this.cycles === 0) {
+      this.cycles = 3;
       // do a cpu and apu cycle every 3 ppu cycles
 
       // handle controller latch
@@ -188,7 +189,7 @@ function Nes() {
       this.apu.cycle();
     }
     this.ppu.cycle();
-    this.cycles++;
+    this.cycles--;
   }
 
   this.runFrame = function() {

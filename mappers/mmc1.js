@@ -66,6 +66,7 @@ mappers[1] = function(nes, rom, header) {
       case 0:
       case 1: {
         final = 0x8000 * (this.prgBank >> 1) + (adr & 0x7fff);
+        break;
       }
       case 2: {
         if(adr < 0xc000) {
@@ -73,6 +74,7 @@ mappers[1] = function(nes, rom, header) {
         } else {
           final = this.prgBank * 0x4000 + (adr & 0x3fff);
         }
+        break;
       }
       case 3: {
         if(adr < 0xc000) {
@@ -80,6 +82,7 @@ mappers[1] = function(nes, rom, header) {
         } else {
           final = (this.h.banks - 1) * 0x4000 + (adr & 0x3fff);
         }
+        break;
       }
     }
     return final & this.h.prgAnd;

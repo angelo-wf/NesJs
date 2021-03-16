@@ -81,22 +81,28 @@ el("pause").onclick = function(e) {
 }
 
 el("reset").onclick = function(e) {
-  player.playSong(currentSong);
-  drawVisual();
+  if(loaded) {
+    player.playSong(currentSong);
+    drawVisual();
+  }
 }
 
 el("nextsong").onclick = function(e) {
-  currentSong++;
-  currentSong = currentSong > player.totalSongs ? player.totalSongs : currentSong;
-  player.playSong(currentSong);
-  drawVisual();
+  if(loaded) {
+    currentSong++;
+    currentSong = currentSong > player.totalSongs ? player.totalSongs : currentSong;
+    player.playSong(currentSong);
+    drawVisual();
+  }
 }
 
 el("prevsong").onclick = function(e) {
-  currentSong--;
-  currentSong = currentSong < 1 ? 1 : currentSong;
-  player.playSong(currentSong);
-  drawVisual();
+  if(loaded) {
+    currentSong--;
+    currentSong = currentSong < 1 ? 1 : currentSong;
+    player.playSong(currentSong);
+    drawVisual();
+  }
 }
 
 document.onvisibilitychange = function(e) {

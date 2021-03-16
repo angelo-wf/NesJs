@@ -76,7 +76,7 @@ function AudioHandler() {
 
   this.nextBuffer = function() {
     if(this.hasAudio) {
-      for(let i = 0; i < 735; i++) {
+      for(let i = 0; i < this.samplesPerFrame; i++) {
         let val = this.sampleBuffer[i];
         this.inputBuffer[(this.inputBufferPos++) & 0xfff] = val;
       }
