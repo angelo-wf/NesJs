@@ -23,11 +23,13 @@ function AudioHandler() {
     this.inputReadPos = 0;
 
     this.scriptNode = undefined;
+    this.dummyNode = undefined;
   }
 
   this.resume = function() {
     // for Chrome autoplay policy
     if(this.hasAudio) {
+      this.actx.onstatechange = function() { console.log(this.actx.state) };
       this.actx.resume();
     }
   }
@@ -35,19 +37,30 @@ function AudioHandler() {
   this.start = function() {
     if(this.hasAudio) {
 
+      this.dummyNode = this.actx.createBufferSource();
+      this.dummyNode.buffer = this.actx.createBuffer(1, 44100, 44100);
+      this.dummyNode.loop = true;
+
       this.scriptNode = this.actx.createScriptProcessor(2048, 1, 1);
       let that = this;
       this.scriptNode.onaudioprocess = function(e) {
         that.process(e);
       }
 
+      this.dummyNode.connect(this.scriptNode);
       this.scriptNode.connect(this.actx.destination);
+      this.dummyNode.start();
 
     }
   }
 
   this.stop = function() {
     if(this.hasAudio) {
+      if(this.dummyNode) {
+        this.dummyNode.stop();
+        this.dummyNode.disconnect();
+        this.dummyNode = undefined;
+      }
       if(this.scriptNode) {
         this.scriptNode.disconnect();
         this.scriptNode = undefined;

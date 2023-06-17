@@ -15,7 +15,7 @@ There is support for both save states and battery saves.
 
 ## Demo
 
-Try the demo online [here](https://elzo-d.github.io/NesJs/). To run the demo offline:
+Try the demo online [here](https://angelo-wf.github.io/NesJs/). To run the demo offline:
 - Clone this repository.
 - Open `index.html` in a browser. Messing around with the browsers autoplay policy might be required.
 - The `Debugger` link at the bottom leads to `debug.html`, which contains a basic debugger.
@@ -44,7 +44,7 @@ Save states and battery saves are stored in localStorage and therefore retained 
 
 ## Debugger
 
-The [debugger](https://elzo-d.github.io/NesJs/debug.html), accessed by loading `debug.html`, or the `Debugger` link, has basic debugging functionality.
+The [debugger](https://angelo-wf.github.io/NesJs/debug.html), accessed by loading `debug.html`, or the `Debugger` link, has basic debugging functionality.
 
 It allows viewing the patterntables & palettes, the nametables, the CPU memory-space and a disassembly of all code that has been executed, with a mark at the current PC. Additionally, the current CPU and PPU state can be seen.
 
@@ -54,7 +54,7 @@ Stepping after pausing (or when a breakpoint triggered) might not immediately ex
 
 ## NSF player
 
-[NsfJs](https://elzo-d.github.io/NesJs/nsfplayer.html), accessed by loading `nsfplayer.html`, or the `NsfJs` link, is a basic NSF player.
+[NsfJs](https://angelo-wf.github.io/NesJs/nsfplayer.html), accessed by loading `nsfplayer.html`, or the `NsfJs` link, is a basic NSF player.
 
 It only supports standard NTSC timings, and only basic 2A03 audio is supported (so none of the expansion chips).
 
