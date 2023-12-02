@@ -1,5 +1,11 @@
 # NesJs
 
+## Notice
+
+I have decided to archive this repository, as I don't see myself working on this emulator any longer. Javascript is simply not a good fit for emulator development, and some personal/mental issues mean that I don't really have the motivation to work on it further (or really, on emulation in general).
+
+## Description
+
 Yet another NES emulator, in javascript for in the browser.
 
 The CPU has almost all instructions emulated, but it is not cycle-accurate (and doesn't emulate the 'unstable' undocumented instructions).
